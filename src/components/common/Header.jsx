@@ -21,7 +21,7 @@ function Header() {
     }}>
       <div>
         <Link to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', textDecoration: 'none' }}>
-          E-Commerce
+          TechMart
         </Link>
       </div>
       
