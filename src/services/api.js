@@ -33,6 +33,7 @@ api.interceptors.request.use(
       // Add Bearer token to Authorization header
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log("token:",token)
 
     // Log the outgoing request for debugging (remove in production)
     console.log("🚀 API Request:", config.method?.toUpperCase(), config.url);

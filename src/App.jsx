@@ -22,7 +22,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <div className="App">
-          <Header />
+          {/* <Header /> */}
           <main className="main-content">
             <Routes>
               {/* <Route path="/" element={<Home />} /> */}
@@ -34,7 +34,7 @@ function App() {
               <Route path="/user" element={<UserCenter />} /> */}
             </Routes>
           </main>
-          <Footer />
+          {/* <Footer /> */}
         </div>
       </BrowserRouter>
     </AuthProvider>

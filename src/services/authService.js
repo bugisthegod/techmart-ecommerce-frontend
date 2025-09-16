@@ -76,31 +76,39 @@ class AuthService {
         username,
         password
       });
-      
+
+      console.log("response:",response);
+
+      // Check if the response status is successful
+      if (response.status !== 200) {
+        throw new Error(`Login failed: ${response.msg}`);
+      }
+
       // Extract the JWT token from the response
       // Your Spring Boot backend returns this in the LoginResponse DTO
-      const { token, user } = response.data;
-      
-      if (token) {
+      const { token, userInfo } = response.data;
+
+
+      if (token && userInfo) {
         // Store the JWT token for future API requests
         // The api.js interceptor will automatically include this in future requests
         localStorage.setItem('jwt_token', token);
         
         // Store user information for easy access throughout the application
-        localStorage.setItem('user_data', JSON.stringify(user));
+        localStorage.setItem('user_data', JSON.stringify(userInfo));
         
-        console.log('✅ Login successful for user:', user.username);
+        console.log('✅ Login successful for user:', userInfo.username);
         
         return {
           success: true,
           message: 'Login successful!',
           data: {
             token,
-            user
+            userInfo
           }
         };
       } else {
-        throw new Error('No token received from server');
+        throw new Error('Invalid response: missing token or user information');
       }
       
     } catch (error) {
