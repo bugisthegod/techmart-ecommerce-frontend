@@ -31,7 +31,7 @@ function Login() {
           type: "success",
           content: "Login successful!",
         });
-        // navigate("/");
+        navigate("/products");
         // message.success("Login successful!");
       } else {
         messageApi.open({

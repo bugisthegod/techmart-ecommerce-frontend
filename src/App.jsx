@@ -8,7 +8,7 @@ import './App.css';
 // import Home from './pages/Home';
 import Login from './pages/Login';
 // import Register from './pages/Register';
-// import ProductList from './pages/ProductList';
+import ProductList from './pages/ProductList';
 // import ProductDetail from './pages/ProductDetail';
 // import Cart from './pages/Cart';
 // import UserCenter from './pages/UserCenter';
@@ -27,11 +27,11 @@ function App() {
             <Routes>
               {/* <Route path="/" element={<Home />} /> */}
               <Route path="/login" element={<Login />} />
-              {/* <Route path="/register" element={<Register />} />
+              {/* <Route path="/register" element={<Register />} /> */}
               <Route path="/products" element={<ProductList />} />
-              <Route path="/products/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/user" element={<UserCenter />} /> */}
+              {/* <Route path="/products/:id" element={<ProductDetail />} /> */}
+              {/* <Route path="/cart" element={<Cart />} /> */}
+              {/* <Route path="/user" element={<UserCenter />} /> */}
             </Routes>
           </main>
           {/* <Footer /> */}
