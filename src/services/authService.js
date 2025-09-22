@@ -55,7 +55,7 @@ class AuthService {
       return {
         success: false,
         message: error.message || "Registration failed. Please try again.",
-        errors: error.data?.errors || null,
+        errors: error.data || null,
       };
     }
   }
@@ -118,7 +118,7 @@ class AuthService {
       return {
         success: false,
         message: error.message || "Invalid username or password",
-        errors: error.data?.errors || null,
+        errors: error.data || null,
       };
     }
   }
@@ -237,7 +237,7 @@ class AuthService {
       return {
         success: false,
         message: error.message || "Failed to update profile",
-        errors: error.data?.errors || null,
+        errors: error.data || null,
       };
     }
   }

@@ -9,7 +9,7 @@ import './App.css';
 import Login from './pages/Login';
 // import Register from './pages/Register';
 import ProductList from './pages/ProductList';
-// import ProductDetail from './pages/ProductDetail';
+import ProductDetail from './pages/ProductDetail';
 // import Cart from './pages/Cart';
 // import UserCenter from './pages/UserCenter';
 
@@ -29,7 +29,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               {/* <Route path="/register" element={<Register />} /> */}
               <Route path="/products" element={<ProductList />} />
-              {/* <Route path="/products/:id" element={<ProductDetail />} /> */}
+              <Route path="/products/:id" element={<ProductDetail />} />
               {/* <Route path="/cart" element={<Cart />} /> */}
               {/* <Route path="/user" element={<UserCenter />} /> */}
             </Routes>
