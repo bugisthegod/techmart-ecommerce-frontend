@@ -38,7 +38,9 @@ class CartService {
   async removeFromCart(cartItemId) {
     try {
       const userId = this.getUserId();
-      const response = await api.delete("/cart/remove", userId, cartItemId);
+      const response = await api.delete("/cart/remove", {
+        params: { userId, cartItemId },
+      });
 
       if (response.status !== 200) {
         throw new Error(`Item removed from cart failed: ${response.msg}`);
@@ -62,13 +64,13 @@ class CartService {
     }
   }
 
-  async updateQuantity(cartItemId, productId, quantity) {
+  async updateQuantity(cartItemId, quantity) {
     try {
       const userId = this.getUserId();
       const response = await api.put(
         `/cart/update/${cartItemId}`,
-        userId,
-        quantity
+        {},
+        { params: { userId, quantity } }
       );
 
       if (response.status !== 200) {
@@ -94,8 +96,7 @@ class CartService {
   async loadCart() {
     try {
       const userId = this.getUserId();
-
-      const response = await api.get("/cart", userId);
+      const response = await api.get("/cart", { params: { userId: userId } });
 
       if (response.status !== 200) {
         throw new Error(`Load Cart failed: ${response.msg}`);
@@ -121,6 +122,7 @@ class CartService {
 
   getUserId() {
     const userData = localStorage.getItem("user_data");
+    console.log("userData", userData);
     return JSON.parse(userData).id || null;
   }
 
@@ -130,7 +132,7 @@ class CartService {
   async clearCart() {
     try {
       const userId = this.getUserId();
-      const response = await api.delete("/cart/clear", userId);
+      const response = await api.delete("/cart/clear", { params: { userId } });
 
       if (response.status !== 200) {
         throw new Error(`Clear Cart failed: ${response.msg}`);
