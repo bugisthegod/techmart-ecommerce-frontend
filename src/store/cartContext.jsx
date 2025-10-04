@@ -15,7 +15,6 @@ const CART_ACTIONS = {
   UPDATE_QUANTITY_FAILURE: "UPDATE_QUANTITY_FAILURE",
   CLEAR_CART_FAILURE: "CLEAR_CART_FAILURE",
   LOAD_CART_FAILURE: "LOAD_CART_FAILURE",
-  CLEAR_CART_FAILURE: "CLEAR_CART_FAILURE",
 };
 
 const initialState = {
@@ -135,7 +134,10 @@ export function CartProvider({ children }) {
       const result = await cartService.removeFromCart(productId);
 
       if (result.success) {
-        dispatch({ type: CART_ACTIONS.REMOVE_ITEM });
+        dispatch({
+          type: CART_ACTIONS.REMOVE_ITEM,
+          payload: { items: result.data.items || [] }
+        });
         return { success: true, message: result.message };
       }
     } catch (error) {
@@ -158,7 +160,10 @@ export function CartProvider({ children }) {
       );
       console.log("updateQuantity result",result);
       if (result.success) {
-        dispatch({ type: CART_ACTIONS.UPDATE_QUANTITY ,payload:{items:result.data}});
+        dispatch({
+          type: CART_ACTIONS.UPDATE_QUANTITY,
+          payload: { items: result.data.items || result.data || [] }
+        });
         return { success: true, message: result.message };
       }
     } catch (error) {
@@ -217,7 +222,8 @@ export function CartProvider({ children }) {
     addItem,
     removeItem,
     updateQuantity,
-    clearCart
+    clearCart,
+    loadCart
   };
 
   return (

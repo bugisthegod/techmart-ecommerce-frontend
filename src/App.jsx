@@ -24,7 +24,7 @@ function App() {
     <CartProvider>
         <BrowserRouter>
           <div className="App">
-            {/* <Header /> */}
+            <Header />
             <main className="main-content">
               <Routes>
                 {/* <Route path="/" element={<Home />} /> */}

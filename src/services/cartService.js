@@ -38,9 +38,12 @@ class CartService {
   async removeFromCart(cartItemId) {
     try {
       const userId = this.getUserId();
-      const response = await api.delete("/cart/remove", {
-        params: { userId, cartItemId },
-      });
+      const response = await api.delete(
+        `/cart/remove/${cartItemId}`,
+        {
+          params: { userId },
+        }
+      );
 
       if (response.status !== 200) {
         throw new Error(`Item removed from cart failed: ${response.msg}`);
