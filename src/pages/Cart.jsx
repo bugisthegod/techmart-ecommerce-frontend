@@ -8,6 +8,8 @@ function Cart(){
     const { items, totalItems, totalPrice, removeItem, updateQuantity, loadCart } = useCart();
     const [selectedItems, setSelectedItems] = useState({});
 
+    console.log('totalItems',totalItems);
+
     // Initialize all items as selected when cart loads
     useEffect(() => {
         const initialSelected = {};

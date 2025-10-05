@@ -136,7 +136,7 @@ export function CartProvider({ children }) {
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.REMOVE_ITEM,
-          payload: { items: result.data.items || [] }
+          payload: { items: result.data.items || [],totalItems:result.data.totalItems }
         });
         return { success: true, message: result.message };
       }
@@ -162,7 +162,7 @@ export function CartProvider({ children }) {
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.UPDATE_QUANTITY,
-          payload: { items: result.data.items || result.data || [] }
+          payload: { items: result.data.items || result.data || [],totalItems:result.data.totalItems }
         });
         return { success: true, message: result.message };
       }
@@ -181,10 +181,10 @@ export function CartProvider({ children }) {
   const loadCart = async () => {
     try {
       const result = await cartService.loadCart();
-      console.log("result",result);
+      console.log("loadCartresult",result);
       if (result.success) {
         dispatch({ type: CART_ACTIONS.LOAD_CART,
-          payload:{items:result.data.items}
+          payload:{items:result.data.items,totalItems:result.data.totalItems}
          });
         return { success: true, message: result.message };
       }
