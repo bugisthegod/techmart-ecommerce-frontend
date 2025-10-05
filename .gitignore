@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 /public/*.svg
 /src/assets/*.svg
+CART_PLAN.md
+.claude/settings.local.json
