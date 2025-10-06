@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, Col, Row, Spin, Pagination } from "antd";
 import { productPagination } from "../services/productService";
 
 const { Meta } = Card;
 
 function ProductList() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,6 +55,7 @@ function ProductList() {
             <Card
               hoverable
               cover={<img alt={product.name} src={product.mainImage} />}
+              onClick={() => navigate(`/products/${product.id}`)}
             >
               <Meta title={product.name} description={`$${product.price}`} />
             </Card>

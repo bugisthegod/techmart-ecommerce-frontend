@@ -5,14 +5,16 @@ import { data } from "react-router-dom";
 class CartService {
   async addToCart(product) {
     try {
-      console.log(" Adding product in cart");
       const userId = this.getUserId();
-      const response = await api.post("/cart/add", {
-        userId: userId,
-        productId: product.id,
-        quantity: product.quantity || 1,
-        selected: product.selected || 1,
-      });
+      const response = await api.post(
+        "/cart/add",
+        {
+          productId: product.productId || product.id,
+          quantity: product.quantity || 1,
+          selected: 1,
+        },
+        { params: { userId } }
+      );
 
       if (response.status != 200) {
         throw new Error(`Add cartItem failed: ${response.msg}`);
@@ -38,12 +40,9 @@ class CartService {
   async removeFromCart(cartItemId) {
     try {
       const userId = this.getUserId();
-      const response = await api.delete(
-        `/cart/remove/${cartItemId}`,
-        {
-          params: { userId },
-        }
-      );
+      const response = await api.delete(`/cart/remove/${cartItemId}`, {
+        params: { userId },
+      });
 
       if (response.status !== 200) {
         throw new Error(`Item removed from cart failed: ${response.msg}`);

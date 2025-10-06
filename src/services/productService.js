@@ -49,3 +49,22 @@ export const searchProductByName = async (name) => {
     };
   }
 };
+
+export const getProductById = async (id) => {
+  try {
+    const response = await api.get(`/products/${id}`);
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        data: response.data,
+      };
+    }
+  } catch (error) {
+    console.error("❌ Product fetch failed:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to fetch product",
+    };
+  }
+};
