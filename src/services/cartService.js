@@ -95,6 +95,35 @@ class CartService {
     }
   }
 
+  async updateItemSelection(cartItemId, selected) {
+    try {
+      const userId = this.getUserId();
+      const response = await api.put(
+        `/cart/select/${cartItemId}`,
+        {},
+        { params: { userId, selected } }
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`Update Cart item selection failed: ${response.msg}`);
+      }
+      console.log("Update cart item selection successful");
+      return {
+        success: true,
+        message: "Update cart item selection successful!",
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error.message ||
+          "Update cart item selection failed. Please try again.",
+        errors: error.data || null,
+      };
+    }
+  }
+
   async loadCart() {
     try {
       const userId = this.getUserId();

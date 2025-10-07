@@ -8,6 +8,7 @@ const CART_ACTIONS = {
   ADD_ITEM: "ADD_ITEM",
   REMOVE_ITEM: "REMOVE_ITEM",
   UPDATE_QUANTITY: "UPDATE_QUANTITY",
+  UPDATE_ITEM_SELECTION:"UPDATE_ITEM_SELECTION",
   CLEAR_CART: "CLEAR_CART",
   LOAD_CART: "LOAD_CART",
   ADD_ITEM_FAILURE: "ADD_ITEM_FAILURE",
@@ -15,6 +16,7 @@ const CART_ACTIONS = {
   UPDATE_QUANTITY_FAILURE: "UPDATE_QUANTITY_FAILURE",
   CLEAR_CART_FAILURE: "CLEAR_CART_FAILURE",
   LOAD_CART_FAILURE: "LOAD_CART_FAILURE",
+  UPDATE_ITEM_SELECTION_FAILURE:"UPDATE_ITEM_SELECTION_FAILURE",
 };
 
 const initialState = {
@@ -26,7 +28,7 @@ const initialState = {
 };
 
 function cartReducer(state, action) {
-  console.log("action",action.payload);
+  console.log("action", action.payload);
   switch (action.type) {
     case CART_ACTIONS.ADD_ITEM:
       return {
@@ -58,6 +60,13 @@ function cartReducer(state, action) {
         error: null,
       };
 
+      case CART_ACTIONS.UPDATE_ITEM_SELECTION:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+      };
+
     case CART_ACTIONS.CLEAR_CART:
       return {
         ...state,
@@ -83,6 +92,7 @@ function cartReducer(state, action) {
     case CART_ACTIONS.UPDATE_QUANTITY_FAILURE:
     case CART_ACTIONS.CLEAR_CART_FAILURE:
     case CART_ACTIONS.LOAD_CART_FAILURE:
+    case CART_ACTIONS.UPDATE_ITEM_SELECTION_FAILURE:
       return {
         ...state,
         isLoading: false,
@@ -136,7 +146,10 @@ export function CartProvider({ children }) {
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.REMOVE_ITEM,
-          payload: { items: result.data.items || [],totalItems:result.data.totalItems }
+          payload: {
+            items: result.data.items || [],
+            totalItems: result.data.totalItems,
+          },
         });
         return { success: true, message: result.message };
       }
@@ -152,17 +165,17 @@ export function CartProvider({ children }) {
     }
   };
 
-  const updateQuantity = async ( cartItemId, quantity) => {
+  const updateQuantity = async (cartItemId, quantity, selected) => {
     try {
-      const result = await cartService.updateQuantity(
-        cartItemId,
-        quantity
-      );
-      console.log("updateQuantity result",result);
+      const result = await cartService.updateQuantity(cartItemId, quantity, selected);
+      console.log("updateQuantity result", result);
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.UPDATE_QUANTITY,
-          payload: { items: result.data.items || result.data || [],totalItems:result.data.totalItems }
+          payload: {
+            items: result.data.items || result.data || [],
+            totalItems: result.data.totalItems,
+          },
         });
         return { success: true, message: result.message };
       }
@@ -178,14 +191,42 @@ export function CartProvider({ children }) {
     }
   };
 
+  
+  const updateItemSelection = async (cartItemId, selected) => {
+    try {
+      const result = await cartService.updateItemSelection(cartItemId, selected);
+      console.log("updateItemSelection result", result);
+      if (result.success) {
+        dispatch({
+          type: CART_ACTIONS.UPDATE_ITEM_SELECTION,
+          payload: { message: result.message }
+        });
+        return { success: true, message: result.message };
+      }
+    } catch (error) {
+      const errorMessage = "Update item selection failed. Please try again.";
+
+      dispatch({
+        type: CART_ACTIONS.UPDATE_ITEM_SELECTION_FAILURE,
+        payload: { message: errorMessage },
+      });
+
+      return { success: false, message: errorMessage };
+    }
+  };
+
   const loadCart = async () => {
     try {
       const result = await cartService.loadCart();
-      console.log("loadCartresult",result);
+      console.log("loadCartresult", result);
       if (result.success) {
-        dispatch({ type: CART_ACTIONS.LOAD_CART,
-          payload:{items:result.data.items,totalItems:result.data.totalItems}
-         });
+        dispatch({
+          type: CART_ACTIONS.LOAD_CART,
+          payload: {
+            items: result.data.items,
+            totalItems: result.data.totalItems,
+          },
+        });
         return { success: true, message: result.message };
       }
     } catch (error) {
@@ -215,22 +256,19 @@ export function CartProvider({ children }) {
     }
   };
 
-    const value = {
+  const value = {
     items: state.items,
     totalItems: state.totalItems,
     totalPrice: state.totalPrice,
     addItem,
     removeItem,
     updateQuantity,
+    updateItemSelection,
     clearCart,
-    loadCart
+    loadCart,
   };
 
-  return (
-    <CartContext.Provider value={value}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

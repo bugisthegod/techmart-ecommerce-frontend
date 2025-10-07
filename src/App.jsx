@@ -11,6 +11,8 @@ import Login from "./pages/Login";
 import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 // import UserCenter from './pages/UserCenter';
 
 // Import components (we'll create these next)
@@ -33,6 +35,8 @@ function App() {
                 <Route path="/products" element={<ProductList />} />
                 <Route path="/products/:id" element={<ProductDetail />} />
                 <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success/:orderId" element={<OrderSuccess />} />
                 {/* <Route path="/user" element={<UserCenter />} /> */}
               </Routes>
             </main>
