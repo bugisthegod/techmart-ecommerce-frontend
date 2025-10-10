@@ -151,10 +151,22 @@ class CartService {
     }
   }
 
+  /**
+   * Get current user ID from localStorage
+   * @returns {number|null} User ID or null if not found
+   */
   getUserId() {
     const userData = localStorage.getItem("user_data");
-    console.log("userData", userData);
-    return JSON.parse(userData).id || null;
+    if (!userData) {
+      console.error("User data not found in localStorage");
+      return null;
+    }
+    try {
+      return JSON.parse(userData).id || null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
   }
 
   /**
