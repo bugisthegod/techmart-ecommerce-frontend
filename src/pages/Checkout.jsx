@@ -11,6 +11,7 @@ import {
   Divider,
   Radio,
   message,
+  Modal,
   Select,
   Space,
   Spin,
@@ -23,6 +24,10 @@ import addressService from "../services/addressService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const {confirm} = Modal;
+
+
+
 
 function Checkout() {
   const navigate = useNavigate();
@@ -36,6 +41,13 @@ function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
 
+  // Helper function to check selected items
+  function checkSelectedItem() {
+    return function (item) {
+      return item.selected === 1;
+    };
+  }
+
   // Calculate totals
   const subtotal = items
     .filter(checkSelectedItem())
@@ -43,6 +55,9 @@ function Checkout() {
   const shipping = subtotal > 50 ? 0 : 5.99;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
+
+
+  
 
   // Debug state changes
   useEffect(() => {
@@ -187,6 +202,23 @@ function Checkout() {
     }
   };
 
+  // Double confirm place order
+  const showConfirm = () => {
+    confirm({
+      title: 'Confirm Order',
+      content: "Are you sure you want to place this order for",
+      okText: 'Yes, Place Order',
+      cancelText: 'Cancel',
+      onOk() {
+        console.log('Order confirmed');
+        onFinish();
+      },
+      onCancel() {
+        console.log('Order cancelled');
+      },
+    });
+  };
+
   const onFinish = async () => {
     setLoading(true);
 
@@ -231,12 +263,6 @@ function Checkout() {
       setLoading(false);
     }
   };
-
-  function checkSelectedItem() {
-    return function (item) {
-      return item.selected === 1;
-    };
-  }
 
   if (items.length === 0) {
     return (
@@ -619,18 +645,20 @@ function Checkout() {
                   </Text>
                 </Row>
               </div>
-
               <Button
                 type="primary"
                 size="large"
                 block
-                onClick={() => form.submit()}
+                onClick={() => showConfirm()}
                 loading={loading}
                 disabled={showAddressForm}
                 title={showAddressForm ? "Please save your address first" : ""}
               >
                 {loading ? "Processing..." : "Place Order"}
               </Button>
+              {/* <confirm title="Are you sure to confirm this order?" onOk={form.submit} /> */}
+
+              
               {showAddressForm && (
                 <Text
                   type="secondary"

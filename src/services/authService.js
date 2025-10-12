@@ -1,4 +1,5 @@
 import api from "./api";
+import { jwtDecode } from "jwt-decode";
 
 /**
  * Authentication Service
@@ -8,6 +9,7 @@ import api from "./api";
  * - JWT token management
  * - User session persistence
  * - Authentication state checking
+ * - Token expiration validation
  *
  * Think of this as your application's security department that handles
  * all user identity verification and access control.
@@ -161,22 +163,63 @@ class AuthService {
 
   /**
    * Check if user is currently authenticated
+   * Validates both token existence AND expiration
    *
-   * @returns {boolean} True if user has a valid token, false otherwise
+   * @returns {boolean} True if user has a valid non-expired token, false otherwise
    */
   isAuthenticated() {
     const token = localStorage.getItem("jwt_token");
     const userData = localStorage.getItem("user_data");
 
-    // Basic check - in a production app, you might want to verify token expiration
-    const isLoggedIn = !!(token && userData);
+    // First check if token and user data exist
+    if (!token || !userData) {
+      console.log("🔍 Authentication check: No token or user data found");
+      return false;
+    }
 
-    console.log(
-      "🔍 Authentication check:",
-      isLoggedIn ? "Authenticated" : "Not authenticated"
-    );
+    // Validate token expiration
+    if (this.isTokenExpired(token)) {
+      console.log("🔍 Authentication check: Token has expired");
+      // Clear expired token and user data
+      this.clearAuthData();
+      return false;
+    }
 
-    return isLoggedIn;
+    console.log("🔍 Authentication check: Authenticated with valid token");
+    return true;
+  }
+
+  /**
+   * Check if JWT token is expired
+   *
+   * @param {string} token - JWT token to check
+   * @returns {boolean} True if token is expired, false otherwise
+   */
+  isTokenExpired(token) {
+    try {
+      const decoded = jwtDecode(token);
+
+      if (!decoded.exp) {
+        // If token doesn't have expiration, consider it invalid
+        console.warn("⚠️ Token missing expiration claim");
+        return true;
+      }
+
+      // JWT exp is in seconds, Date.now() is in milliseconds
+      const currentTime = Date.now() / 1000;
+      const isExpired = decoded.exp < currentTime;
+
+      if (isExpired) {
+        const expirationDate = new Date(decoded.exp * 1000);
+        console.log(`⏰ Token expired at: ${expirationDate.toLocaleString()}`);
+      }
+
+      return isExpired;
+    } catch (error) {
+      console.error("❌ Error decoding token:", error);
+      // If we can't decode the token, consider it invalid
+      return true;
+    }
   }
 
   /**

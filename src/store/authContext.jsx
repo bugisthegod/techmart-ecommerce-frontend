@@ -160,12 +160,14 @@ export function AuthProvider({ children }) {
 
     try {
       const result = await authService.login(username, password);
+
+      console.log("after login success",result);
       
       if (result.success) {
         dispatch({
           type: AUTH_ACTIONS.LOGIN_SUCCESS,
           payload: {
-            user: result.data.user,
+            user: result.data.userInfo,
             token: result.data.token
           }
         });
