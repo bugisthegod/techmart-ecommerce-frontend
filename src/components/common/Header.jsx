@@ -14,7 +14,7 @@ function Header() {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/login");
   };
 
   return (
@@ -45,9 +45,14 @@ function Header() {
           Products
         </Link>
         {isAuthenticated && (
-          <Link to="/cart" style={{ marginRight: "1rem" }}>
-            Cart
-          </Link>
+          <>
+            <Link to="/cart" style={{ marginRight: "1rem" }}>
+              Cart
+            </Link>
+            <Link to="/orders" style={{ marginRight: "1rem" }}>
+              My Orders
+            </Link>
+          </>
         )}
       </nav>
 

@@ -18,6 +18,13 @@ const api = axios.create({
   },
 });
 
+// PERSISTENT storage navigateFunction
+// api.js is not a React component, so you need to store navigate (React's hook) from App.jsx (React component)
+let navigateFunction = null;
+export const setNavigate = (navigate) =>{
+  navigateFunction = navigate;
+}
+
 /**
  * Request Interceptor
  * This runs before every API request is sent
@@ -78,7 +85,7 @@ api.interceptors.response.use(
           console.warn("🔒 Authentication failed - redirecting to login");
           localStorage.removeItem("jwt_token");
           // We'll implement proper redirect logic later
-          window.location.href = "/login";
+          if(navigateFunction) navigateFunction("/login");
           break;
 
         case 403:
