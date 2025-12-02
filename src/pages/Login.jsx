@@ -80,14 +80,13 @@ function Login() {
       name="loginForm"
       layout="vertical"
       initialValues={{ remember: true }}
-      onValuesChange={handleChange}
+      onValuesChange={() => handleChange}
       onFinish={onLoginFinish}
       autoComplete="off"
     >
       <Form.Item
         label="Username"
         name="username"
-        // initialValue={"Abel"}
         rules={[{ required: true, message: "Please input your username!" }]}
       >
         <Input size="large" />
@@ -96,7 +95,6 @@ function Login() {
       <Form.Item
         label="Password"
         name="password"
-        // initialValue={"Abel123"}
         rules={[{ required: true, message: "Please input your password!" }]}
       >
         <Input.Password size="large" />
