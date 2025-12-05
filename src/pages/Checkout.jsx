@@ -1,38 +1,62 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
-  Form,
-  Input,
-  Button,
-  Card,
-  Row,
-  Col,
-  Typography,
-  Divider,
-  Radio,
-  message,
-  Modal,
-  Select,
-  Space,
-  Spin,
-  Checkbox,
-} from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+  CreditCard,
+  MapPin,
+  Plus,
+  Check,
+  Truck,
+  Loader2
+} from "lucide-react";
 import { useCart } from "../store/cartContext";
 import orderService from "../services/orderService";
 import addressService from "../services/addressService";
 
-const { Title, Text } = Typography;
-const { Option } = Select;
-const {confirm} = Modal;
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "sonner";
 
-
-
+// Address Schema
+const addressSchema = z.object({
+  fullName: z.string().min(1, "Full Name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  postalCode: z.string().min(1, "Postal Code is required"),
+  phone: z.string().min(1, "Phone is required"),
+  isDefault: z.boolean().default(false),
+});
 
 function Checkout() {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
-  const [form] = Form.useForm();
+  const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
@@ -40,96 +64,56 @@ function Checkout() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Helper function to check selected items
-  function checkSelectedItem() {
-    return function (item) {
-      return item.selected === 1;
-    };
-  }
+  // Address Form
+  const form = useForm({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      fullName: "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      phone: "",
+      isDefault: false,
+    },
+  });
 
   // Calculate totals
-  const subtotal = items
-    .filter(checkSelectedItem())
-    .reduce((total, item) => total + item.productPrice * item.quantity, 0);
+  const selectedItems = items.filter(item => item.selected === 1);
+  const subtotal = selectedItems.reduce((total, item) => total + item.productPrice * item.quantity, 0);
   const shipping = subtotal > 50 ? 0 : 5.99;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
-
-  
-
-  // Debug state changes
-  useEffect(() => {
-    console.log("State changed:", {
-      loadingAddresses,
-      showAddressForm,
-      savedAddressesCount: savedAddresses.length,
-      selectedAddressId,
-    });
-  }, [loadingAddresses, showAddressForm, savedAddresses, selectedAddressId]);
-
-  // Load addresses and generate order token on mount
+  // Initialize
   useEffect(() => {
     async function initializeCheckout() {
       try {
         setLoadingAddresses(true);
 
-        // Fetch saved addresses
         const addressResponse = await addressService.getUserAddresses();
-        console.log("Address response:", addressResponse);
-
         // Handle different response structures
-        let addresses = [];
-        if (addressResponse.success && addressResponse.data) {
-          addresses = addressResponse.data;
-        } else if (addressResponse.data) {
-          // Response might just have data without success flag
-          addresses = addressResponse.data;
-        } else if (Array.isArray(addressResponse)) {
-          // Response might be the array directly
-          addresses = addressResponse;
-        }
+        let addresses = addressResponse.data || addressResponse;
+        if (addressResponse.success && addressResponse.data) addresses = addressResponse.data;
 
         if (addresses && addresses.length > 0) {
           setSavedAddresses(addresses);
-
-          // Auto-select default address if exists
           const defaultAddress = addresses.find((addr) => addr.isDefault);
-          if (defaultAddress) {
-            setSelectedAddressId(defaultAddress.id);
-          } else {
-            // If no default, select first address
-            setSelectedAddressId(addresses[0].id);
-          }
+          setSelectedAddressId(defaultAddress ? defaultAddress.id : addresses[0].id);
         } else {
-          // No addresses, show form
-          console.log("No saved addresses found, showing address form");
           setSavedAddresses([]);
           setShowAddressForm(true);
         }
 
-        // Generate order token for idempotency
         const tokenResponse = await orderService.generateOrderToken();
-        console.log("Order token response:", tokenResponse);
+        const token = tokenResponse.data || tokenResponse;
+        if (token) setOrderToken(token);
 
-        if (tokenResponse.success) {
-          setOrderToken(tokenResponse.data);
-        } else if (tokenResponse.data) {
-          // Handle case where response structure is different
-          setOrderToken(tokenResponse.data);
-        }
       } catch (error) {
         console.error("Initialize checkout error:", error);
-        console.error("Error details:", error.response || error);
-
-        // Show address form if loading fails
         setShowAddressForm(true);
-
-        // Only show error if it's not a "no addresses" scenario
-        if (error.response?.status !== 404) {
-          message.error("Failed to load checkout data");
-        }
       } finally {
         setLoadingAddresses(false);
       }
@@ -138,110 +122,58 @@ function Checkout() {
     initializeCheckout();
   }, []);
 
-  // Handle saving a new address (separate from placing order)
-  const handleSaveNewAddress = async () => {
+  const handleSaveNewAddress = async (values) => {
+    setLoading(true);
     try {
-      // Validate form fields
-      const values = await form.validateFields([
-        "fullName",
-        "address",
-        "city",
-        "state",
-        "postalCode",
-        "phone",
-        "isDefault",
-      ]);
-
-      setLoading(true);
-
-      // Create new address
       const addressData = {
         receiverName: values.fullName,
         receiverPhone: values.phone,
         province: values.state,
         city: values.city,
-        district: values.city,
+        district: values.city, // simplfication
         detailAddress: values.address,
         postalCode: values.postalCode,
-        isDefault:
-          values.isDefault !== undefined
-            ? values.isDefault == true? 1: 0
-            : savedAddresses.length === 0,
+        isDefault: values.isDefault ? 1 : (savedAddresses.length === 0 ? 1 : 0),
       };
 
       const addressResult = await addressService.createAddress(addressData);
+      const newAddress = addressResult.data || addressResult;
 
-      if (addressResult.success || addressResult.data) {
-        const newAddress = addressResult.data;
-        message.success("Address saved successfully!");
-
-        // Add to saved addresses list
+      if (addressResult.success || newAddress) {
+        toast.success("Address saved successfully!");
         setSavedAddresses([...savedAddresses, newAddress]);
-
-        // Select the newly created address
         setSelectedAddressId(newAddress.id);
-
-        // Hide the form and show saved addresses
         setShowAddressForm(false);
-
-        // Clear form
-        form.resetFields();
+        form.reset();
       } else {
-        message.error("Failed to save address");
+        toast.error("Failed to save address");
       }
     } catch (error) {
-      if (error.errorFields) {
-        // Validation error
-        message.error("Please fill in all required fields");
-      } else {
-        console.error("Save address error:", error);
-        message.error("Failed to save address. Please try again.");
-      }
+      toast.error("Failed to save address. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Double confirm place order
-  const showConfirm = () => {
-    confirm({
-      title: 'Confirm Order',
-      content: "Are you sure you want to place this order for",
-      okText: 'Yes, Place Order',
-      cancelText: 'Cancel',
-      onOk() {
-        console.log('Order confirmed');
-        onFinish();
-      },
-      onCancel() {
-        console.log('Order cancelled');
-      },
-    });
-  };
-
-  const onFinish = async () => {
+  const handlePlaceOrder = async () => {
+    setShowConfirmDialog(false);
     setLoading(true);
 
     try {
-      // Step 1: Validate that a saved address is selected
       if (!selectedAddressId) {
-        message.error("Please save your address first before placing order");
+        toast.error("Please save your address first before placing order");
         setLoading(false);
         return;
       }
 
-      const addressId = selectedAddressId;
-
-      // Validate order token
       if (!orderToken) {
-        message.error("Order token is missing. Please refresh the page.");
+        toast.error("Order token is missing. Please refresh the page.");
         setLoading(false);
         return;
       }
 
-      // Step 2: Create order with the address ID and token
       const orderData = {
-        addressId: addressId,
+        addressId: selectedAddressId,
         comment: `Payment method: ${paymentMethod}`,
         freightType: "standard",
       };
@@ -249,16 +181,15 @@ function Checkout() {
       const orderResult = await orderService.createOrder(orderData, orderToken);
 
       if (orderResult.success) {
-        message.success("Order placed successfully!");
+        toast.success("Order placed successfully!");
         await clearCart();
-        // Navigate to success page with order ID
         navigate(`/order-success/${orderResult.data.id}`);
       } else {
-        message.error(orderResult.message || "Failed to place order");
+        toast.error(orderResult.message || "Failed to place order");
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      message.error("Failed to place order. Please try again.");
+      toast.error("Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -266,9 +197,9 @@ function Checkout() {
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <Title level={3}>Your cart is empty</Title>
-        <Button type="primary" onClick={() => navigate("/products")}>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <h2 className="text-2xl font-semibold">Your cart is empty</h2>
+        <Button onClick={() => navigate("/products")}>
           Continue Shopping
         </Button>
       </div>
@@ -276,406 +207,279 @@ function Checkout() {
   }
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        backgroundColor: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <Title level={2}>Checkout</Title>
+    <div className="container mx-auto px-4 py-8 max-w-7xl bg-gray-50/50 dark:bg-zinc-950/50 min-h-screen">
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Checkout</h1>
 
-        <Row gutter={[20, 20]}>
-          {/* Left side - Shipping and Payment forms */}
-          <Col xs={24} lg={16}>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={onFinish}
-              autoComplete="off"
-            >
-              {/* Shipping Address */}
-              <Card title="Shipping Address" style={{ marginBottom: "20px" }}>
-                {loadingAddresses ? (
-                  <div style={{ textAlign: "center", padding: "20px" }}>
-                    <Spin tip="Loading addresses..." />
-                  </div>
-                ) : (
-                  <>
-                    {/* Show saved addresses if user has any */}
-                    {!showAddressForm && savedAddresses.length > 0 && (
-                      <div style={{ marginBottom: "20px" }}>
-                        <Text
-                          strong
-                          style={{ display: "block", marginBottom: "10px" }}
-                        >
-                          Select delivery address:
-                        </Text>
-                        <Radio.Group
-                          value={selectedAddressId}
-                          onChange={(e) => setSelectedAddressId(e.target.value)}
-                          style={{ width: "100%" }}
-                        >
-                          {savedAddresses.map((address) => (
-                            <Radio
-                              key={address.id}
-                              value={address.id}
-                              style={{
-                                display: "block",
-                                marginBottom: "15px",
-                                padding: "12px",
-                                border:
-                                  selectedAddressId === address.id
-                                    ? "2px solid #1890ff"
-                                    : "1px solid #d9d9d9",
-                                borderRadius: "4px",
-                              }}
-                            >
-                              <div style={{ marginLeft: "8px" }}>
-                                <Text strong>{address.receiverName}</Text>
-                                {address.isDefault && (
-                                  <Text
-                                    type="secondary"
-                                    style={{
-                                      marginLeft: "8px",
-                                      fontSize: "12px",
-                                    }}
-                                  >
-                                    (Default)
-                                  </Text>
-                                )}
-                                <br />
-                                <Text type="secondary">
-                                  {address.detailAddress}, {address.city},{" "}
-                                  {address.province} {address.postalCode}
-                                </Text>
-                                <br />
-                                <Text type="secondary">
-                                  Phone: {address.phone}
-                                </Text>
-                              </div>
-                            </Radio>
-                          ))}
-                        </Radio.Group>
-                        <Button
-                          type="link"
-                          icon={<PlusOutlined />}
-                          onClick={() => setShowAddressForm(true)}
-                          style={{ marginTop: "10px", padding: 0 }}
-                        >
-                          Add new address
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Show address form for new address or when user has no addresses */}
-                    {showAddressForm && (
-                      <div>
-                        {savedAddresses.length > 0 && (
-                          <Button
-                            type="link"
-                            onClick={() => setShowAddressForm(false)}
-                            style={{ marginBottom: "10px", padding: 0 }}
-                          >
-                            ← Use saved address
-                          </Button>
-                        )}
-                        <Row gutter={16}>
-                          <Col span={24}>
-                            <Form.Item
-                              label="Full Name"
-                              name="fullName"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your full name",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="John Doe" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={24}>
-                            <Form.Item
-                              label="Address"
-                              name="address"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your address",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="123 Main Street" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="City"
-                              name="city"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your city",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="New York" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="State"
-                              name="state"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your state",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="NY" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="Postal Code"
-                              name="postalCode"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your postal code",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="10001" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={12}>
-                            <Form.Item
-                              label="Phone"
-                              name="phone"
-                              rules={[
-                                {
-                                  required: showAddressForm,
-                                  message: "Please enter your phone number",
-                                },
-                              ]}
-                            >
-                              <Input placeholder="+1 234 567 8900" />
-                            </Form.Item>
-                          </Col>
-                          <Col span={24}>
-                            <Form.Item
-                              name="isDefault"
-                              valuePropName="checked"
-                              initialValue={savedAddresses.length === 0}
-                            >
-                              <Checkbox disabled={savedAddresses.length === 0}>
-                                Set as default address
-                                {savedAddresses.length === 0 && (
-                                  <Text
-                                    type="secondary"
-                                    style={{
-                                      marginLeft: "8px",
-                                      fontSize: "12px",
-                                    }}
-                                  >
-                                    (This will be your first address)
-                                  </Text>
-                                )}
-                              </Checkbox>
-                            </Form.Item>
-                          </Col>
-                        </Row>
-
-                        {/* Action buttons for new address form */}
-                        <div
-                          style={{
-                            marginTop: "15px",
-                            padding: "10px",
-                            backgroundColor: "#f0f2f5",
-                            borderRadius: "4px",
-                          }}
-                        >
-                          <Text
-                            type="secondary"
-                            style={{
-                              display: "block",
-                              marginBottom: "10px",
-                              fontSize: "13px",
-                            }}
-                          >
-                            💡 Save your address first, then you can place the
-                            order
-                          </Text>
-                          <Space>
-                            <Button
-                              type="primary"
-                              onClick={handleSaveNewAddress}
-                              loading={loading}
-                            >
-                              Save Address
-                            </Button>
-                            {savedAddresses.length > 0 && (
-                              <Button
-                                onClick={() => {
-                                  setShowAddressForm(false);
-                                  form.resetFields();
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                            )}
-                          </Space>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Side - Forms */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Shipping Address */}
+          <Card className="border-0 shadow-md bg-white/60 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" /> Shipping Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingAddresses ? (
+                <div className="flex justify-center p-4">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  {!showAddressForm && savedAddresses.length > 0 && (
+                    <RadioGroup value={selectedAddressId} onValueChange={setSelectedAddressId} className="space-y-3">
+                      {savedAddresses.map((address) => (
+                        <div key={address.id} className={`flex items-start space-x-3 space-y-0 rounded-md border p-4 transition-colors ${selectedAddressId === address.id ? 'border-primary bg-primary/5' : 'border-muted hover:bg-muted/50'}`}>
+                          <RadioGroupItem value={address.id} id={address.id} />
+                          <div className="grid gap-1.5 leading-none w-full">
+                            <Label htmlFor={address.id} className="font-semibold cursor-pointer">
+                              {address.receiverName}
+                              {address.isDefault === 1 && <span className="ml-2 text-xs text-muted-foreground font-normal">(Default)</span>}
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              {address.detailAddress}, {address.city}, {address.province} {address.postalCode}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {address.phone}
+                            </p>
+                          </div>
                         </div>
+                      ))}
+                      <Button variant="outline" size="sm" onClick={() => setShowAddressForm(true)} className="mt-2">
+                        <Plus className="mr-2 h-4 w-4" /> Add New Address
+                      </Button>
+                    </RadioGroup>
+                  )}
+
+                  {showAddressForm && (
+                    <div className="bg-muted/30 p-4 rounded-lg border">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-medium">Add New Address</h3>
+                        {savedAddresses.length > 0 && (
+                          <Button variant="ghost" size="sm" onClick={() => setShowAddressForm(false)}>Cancel</Button>
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
-              </Card>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleSaveNewAddress)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Address</FormLabel>
+                                <FormControl><Input placeholder="123 Main St" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City</FormLabel>
+                                  <FormControl><Input placeholder="New York" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="state"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>State</FormLabel>
+                                  <FormControl><Input placeholder="NY" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="postalCode"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Postal Code</FormLabel>
+                                  <FormControl><Input placeholder="10001" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Phone</FormLabel>
+                                  <FormControl><Input placeholder="+1 234 567 8900" {...field} /></FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name="isDefault"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>
+                                    Set as default address
+                                  </FormLabel>
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Address
+                          </Button>
+                        </form>
+                      </Form>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-              {/* Payment Method */}
-              <Card title="Payment Method" style={{ marginBottom: "20px" }}>
-                <Radio.Group
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  style={{ width: "100%" }}
-                >
-                  <Radio
-                    value="credit_card"
-                    style={{ display: "block", marginBottom: "10px" }}
+          {/* Payment Method */}
+          <Card className="border-0 shadow-md bg-white/60 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" /> Payment Method
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <RadioGroupItem value="credit_card" id="credit_card" className="peer sr-only" />
+                  <Label
+                    htmlFor="credit_card"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                   >
+                    <CreditCard className="mb-3 h-6 w-6" />
                     Credit Card
-                  </Radio>
-                  <Radio
-                    value="paypal"
-                    style={{ display: "block", marginBottom: "10px" }}
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="paypal" id="paypal" className="peer sr-only" />
+                  <Label
+                    htmlFor="paypal"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                   >
+                    <span className="mb-3 text-xl font-bold">Paypal</span>
                     PayPal
-                  </Radio>
-                  <Radio value="cash_on_delivery" style={{ display: "block" }}>
-                    Cash on Delivery
-                  </Radio>
-                </Radio.Group>
-                <Text
-                  type="secondary"
-                  style={{ display: "block", marginTop: "15px" }}
-                >
-                  Note: This is a demo payment. No actual payment will be
-                  processed.
-                </Text>
-              </Card>
-            </Form>
-          </Col>
-
-          {/* Right side - Order Summary */}
-          <Col xs={24} lg={8}>
-            <Card title="Order Summary">
-              {/* Order items */}
-              <div style={{ marginBottom: "20px" }}>
-                {items.filter(checkSelectedItem()).map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      marginBottom: "15px",
-                      display: "flex",
-                      gap: "10px",
-                    }}
+                  </Label>
+                </div>
+                <div>
+                  <RadioGroupItem value="cash_on_delivery" id="cod" className="peer sr-only" />
+                  <Label
+                    htmlFor="cod"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                   >
-                    <img
-                      src={item.productImage}
-                      alt={item.productName}
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        objectFit: "cover",
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <Text
-                        strong
-                        style={{ display: "block", fontSize: "14px" }}
-                      >
-                        {item.productName}
-                      </Text>
-                      <Text type="secondary">Qty: {item.quantity}</Text>
-                      <Text strong style={{ display: "block" }}>
-                        ${(item.productPrice * item.quantity).toFixed(2)}
-                      </Text>
+                    <Truck className="mb-3 h-6 w-6" />
+                    Cash on Delivery
+                  </Label>
+                </div>
+              </RadioGroup>
+              <p className="text-sm text-muted-foreground mt-4 text-center">
+                Note: This is a demo payment. No actual payment will be processed.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Side - Summary */}
+        <div>
+          <Card className="sticky top-24 border-0 shadow-lg bg-white/80 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ScrollArea className="h-[300px] w-full rounded-md border p-2">
+                {selectedItems.map((item) => (
+                  <div key={item.id} className="flex gap-4 mb-4">
+                    <img src={item.productImage} alt={item.productName} className="h-16 w-16 object-cover rounded-md" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{item.productName}</p>
+                      <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                      <p className="font-bold text-sm text-primary">${(item.productPrice * item.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}
+              </ScrollArea>
+              <Separator />
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span>{shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tax (10%)</span>
+                  <span>${tax.toFixed(2)}</span>
+                </div>
               </div>
-
-              <Divider />
-
-              {/* Price breakdown */}
-              <div style={{ marginBottom: "10px" }}>
-                <Row justify="space-between">
-                  <Text>Subtotal:</Text>
-                  <Text>${subtotal.toFixed(2)}</Text>
-                </Row>
+              <Separator />
+              <div className="flex justify-between font-bold text-lg">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
               </div>
-              <div style={{ marginBottom: "10px" }}>
-                <Row justify="space-between">
-                  <Text>Shipping:</Text>
-                  <Text>
-                    {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
-                  </Text>
-                </Row>
-              </div>
-              <div style={{ marginBottom: "10px" }}>
-                <Row justify="space-between">
-                  <Text>Tax (10%):</Text>
-                  <Text>${tax.toFixed(2)}</Text>
-                </Row>
-              </div>
-
-              <Divider />
-
-              <div style={{ marginBottom: "20px" }}>
-                <Row justify="space-between">
-                  <Text strong style={{ fontSize: "18px" }}>
-                    Total:
-                  </Text>
-                  <Text strong style={{ fontSize: "18px" }}>
-                    ${total.toFixed(2)}
-                  </Text>
-                </Row>
-              </div>
+            </CardContent>
+            <CardFooter>
               <Button
-                type="primary"
-                size="large"
-                block
-                onClick={() => showConfirm()}
-                loading={loading}
-                disabled={showAddressForm}
-                title={showAddressForm ? "Please save your address first" : ""}
+                size="lg"
+                className="w-full"
+                onClick={() => setShowConfirmDialog(true)}
+                disabled={loading || showAddressForm || savedAddresses.length === 0}
               >
-                {loading ? "Processing..." : "Place Order"}
+                Place Order
               </Button>
-              {/* <confirm title="Are you sure to confirm this order?" onOk={form.submit} /> */}
-
-              
-              {showAddressForm && (
-                <Text
-                  type="secondary"
-                  style={{
-                    display: "block",
-                    marginTop: "10px",
-                    fontSize: "12px",
-                    textAlign: "center",
-                  }}
-                >
-                  Please save your address first
-                </Text>
-              )}
-            </Card>
-          </Col>
-        </Row>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to place this order for ${total.toFixed(2)}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePlaceOrder} disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Confirm Order
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

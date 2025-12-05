@@ -1,34 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  Row,
-  Col,
-  Button,
-  InputNumber,
-  Typography,
-  Empty,
-  Divider,
-  Checkbox,
-} from "antd";
 import { useCart } from "../store/cartContext";
-
-const { Title, Text } = Typography;
+import {
+  Trash2,
+  Minus,
+  Plus,
+  ShoppingCart
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 function Cart() {
   const navigate = useNavigate();
   const {
     items,
     totalItems,
-    totalPrice,
     removeItem,
     updateQuantity,
     updateItemSelection,
-    loadCart,
   } = useCart();
   const [selectedItems, setSelectedItems] = useState({});
-
-  console.log("totalItems", totalItems);
 
   // Initialize all items as selected when cart loads
   useEffect(() => {
@@ -39,8 +32,10 @@ function Cart() {
     setSelectedItems(initialSelected);
   }, [items.length]);
 
-  const handleQuantityChange = async (cartItemId, newQuantity, selected) => {
-    const result = await updateQuantity(cartItemId, newQuantity, selected);
+  const handleQuantityChange = async (cartItemId, newQuantity) => {
+    if (newQuantity < 1) return;
+    // Debouncing could be added here if needed, but for now direct update
+    await updateQuantity(cartItemId, newQuantity);
   };
 
   const handleRemoveItem = async (productId) => {
@@ -52,7 +47,6 @@ function Cart() {
       ...prev,
       [itemId]: checked,
     }));
-    console.log("handleselected", itemId, checked ? 1 : 0);
     await updateItemSelection(itemId, checked ? 1 : 0);
   };
 
@@ -60,193 +54,157 @@ function Cart() {
     const newSelected = {};
     items.forEach((item) => {
       newSelected[item.id] = checked;
+      updateItemSelection(item.id, checked ? 1 : 0); // Update backend/store
     });
     setSelectedItems(newSelected);
   };
 
   // Calculate totals based on selected items
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
-  const selectedTotal = Array.isArray(items)
-    ? items.reduce((total, item) => {
-        if (selectedItems[item.id]) {
-          return total + item.productPrice * item.quantity;
-        }
-        return total;
-      }, 0)
-    : 0;
+  // Ensure we rely on backend/store 'selected' state mostly, but for immediate UI feedback we use local state or store data
+  const selectedTotal = items.reduce((total, item) => {
+    return item.selected ? total + item.productPrice * item.quantity : total;
+  }, 0);
+
+  const allSelected = items.length > 0 && items.every(item => item.selected);
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: "20px" }}>
-        <Title level={2}>Shopping Cart</Title>
-        <Empty description="Your cart is empty" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <ShoppingCart className="h-16 w-16 text-muted-foreground opacity-50" />
+        <h2 className="text-2xl font-semibold">Your cart is empty</h2>
+        <Button onClick={() => navigate("/products")}>
+          Start Shopping
+        </Button>
       </div>
     );
   }
 
-  const allSelected = items.length > 0 && selectedCount === items.length;
-
   return (
-    <div
-      style={{
-        padding: "20px",
-        width: "100%",
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-      }}
-    >
-      <Row gutter={[20, 20]} style={{ maxWidth: "1600px", margin: "0 auto" }}>
-        {/* Left side - Shopping cart items */}
-        <Col xs={24} lg={17}>
-          <div style={{ backgroundColor: "white", padding: "20px" }}>
-            <Title level={2} style={{ margin: "0 0 20px 0" }}>
-              Shopping Basket
-            </Title>
+    <div className="container mx-auto px-4 py-8 max-w-7xl bg-gray-50/50 dark:bg-zinc-950/50 min-h-screen">
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Shopping Cart</h1>
 
-            {/* Select All checkbox */}
-            <div
-              style={{
-                marginBottom: "16px",
-                paddingBottom: "16px",
-                borderBottom: "1px solid #e8e8e8",
-              }}
-            >
-              <Checkbox
-                checked={allSelected}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-              >
-                Select All ({items.length} item{items.length > 1 ? "s" : ""})
-              </Checkbox>
-            </div>
-
-            {items.map((item) => (
-              <div
-                key={item.id}
-                style={{ borderBottom: "1px solid #e8e8e8", padding: "20px 0" }}
-              >
-                <Row align="middle" gutter={[16, 16]}>
-                  {/* Checkbox */}
-                  <Col flex="30px">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Left side - Cart Items */}
+        <div className="flex-1 space-y-4">
+          <Card className="border-0 shadow-md bg-white/60 backdrop-blur-md">
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(checked) => handleSelectAll(checked)}
+                  id="select-all"
+                />
+                <label htmlFor="select-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Select All ({items.length} items)
+                </label>
+              </div>
+            </CardHeader>
+            <Separator />
+            <CardContent className="space-y-6 pt-6">
+              {items.map((item) => (
+                <div key={item.id} className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex items-start pt-2">
                     <Checkbox
-                      checked={selectedItems[item.id] || false}
-                      onChange={(e) =>
-                        handleItemSelect(item.id, e.target.checked)
-                      }
+                      checked={item.selected === 1} // Sync with store item state which should be updated
+                      onCheckedChange={(checked) => handleItemSelect(item.id, checked)}
                     />
-                  </Col>
-
-                  {/* Product image */}
-                  <Col flex="180px">
+                  </div>
+                  <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-white">
                     <img
                       src={item.productImage}
                       alt={item.productName}
-                      style={{
-                        width: "160px",
-                        height: "160px",
-                        objectFit: "cover",
-                      }}
+                      className="h-full w-full object-cover object-center"
                     />
-                  </Col>
+                  </div>
 
-                  {/* Product details */}
-                  <Col flex="auto">
-                    <Title level={4} style={{ marginBottom: "8px" }}>
-                      {item.productName}
-                    </Title>
-                    <Text
-                      type="secondary"
-                      style={{ display: "block", marginBottom: "12px" }}
-                    >
-                      In stock
-                    </Text>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                      }}
-                    >
-                      <InputNumber
-                        min={1}
-                        value={item.quantity}
-                        onChange={(value) =>
-                          handleQuantityChange(item.id, value)
-                        }
-                        style={{ width: "80px" }}
-                      />
+                  <div className="flex flex-1 flex-col justify-between">
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-base font-medium text-foreground">
+                          {item.productName}
+                        </h3>
+                        <p className="mt-1 text-sm text-green-600 font-medium">In stock</p>
+                      </div>
+                      <p className="text-lg font-bold text-foreground">
+                        ${(item.productPrice * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <div className="w-12 text-center text-sm font-medium">
+                          {item.quantity}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+
                       <Button
-                        type="link"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                         onClick={() => handleRemoveItem(item.id)}
-                        style={{ padding: 0 }}
                       >
-                        Delete
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove
                       </Button>
                     </div>
-                  </Col>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
-                  {/* Price */}
-                  <Col flex="120px" style={{ textAlign: "right" }}>
-                    <Text strong style={{ fontSize: "22px" }}>
-                      ${(item.productPrice * item.quantity).toFixed(2)}
-                    </Text>
-                  </Col>
-                </Row>
+        {/* Right side - Summary */}
+        <div className="lg:w-80 xl:w-96">
+          <Card className="sticky top-24 border-0 shadow-lg bg-white/80 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between text-base font-medium">
+                <span>Subtotal</span>
+                <span>${selectedTotal.toFixed(2)}</span>
               </div>
-            ))}
-
-            {/* Bottom subtotal */}
-            <div style={{ padding: "20px 0", textAlign: "right" }}>
-              <Text strong style={{ fontSize: "18px" }}>
-                Subtotal ({selectedCount} item{selectedCount !== 1 ? "s" : ""}):
-                ${selectedTotal.toFixed(2)}
-              </Text>
-            </div>
-          </div>
-        </Col>
-
-        {/* Right side - Checkout summary */}
-        <Col xs={24} lg={7}>
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              position: "sticky",
-              top: "20px",
-            }}
-          >
-            <Text
-              strong
-              style={{
-                fontSize: "18px",
-                display: "block",
-                marginBottom: "12px",
-              }}
-            >
-              Subtotal ({selectedCount} item{selectedCount !== 1 ? "s" : ""}):
-            </Text>
-            <Text
-              strong
-              style={{
-                fontSize: "24px",
-                display: "block",
-                marginBottom: "20px",
-              }}
-            >
-              ${selectedTotal.toFixed(2)}
-            </Text>
-            <Button
-              type="primary"
-              size="large"
-              block
-              disabled={selectedCount === 0}
-              style={{ marginBottom: "12px" }}
-              onClick={() => navigate("/checkout")}
-            >
-              Proceed to Checkout
-            </Button>
-          </div>
-        </Col>
-      </Row>
+              <div className="text-xs text-muted-foreground">
+                Shipping and taxes calculated at checkout.
+              </div>
+            </CardContent>
+            <Separator className="my-2" />
+            <CardFooter className="flex flex-col gap-4 pt-4">
+              <div className="flex justify-between w-full text-lg font-bold">
+                <span>Total</span>
+                <span>${selectedTotal.toFixed(2)}</span>
+              </div>
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => navigate("/checkout")}
+                disabled={selectedTotal === 0}
+              >
+                Proceed to Checkout
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

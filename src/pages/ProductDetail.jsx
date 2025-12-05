@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, RouterProvider } from "react-router-dom";
-import {
-  Row,
-  Col,
-  Image,
-  Button,
-  InputNumber,
-  Typography,
-  Spin,
-  message,
-  Breadcrumb,
-  Divider,
-  Tag,
-  Rate,
-} from "antd";
-import {
-  ShoppingCartOutlined,
-  HeartOutlined,
-  ShareAltOutlined,
-  HomeOutlined,
-} from "@ant-design/icons";
+import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import { useCart } from "../store/cartContext";
-
-const { Title, Text, Paragraph } = Typography;
+import {
+  Loader2,
+  ShoppingCart,
+  Heart,
+  Share2,
+  Home,
+  Star,
+  Minus,
+  Plus,
+  Check
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
+import { toast } from "sonner";
 
 function ProductDetail() {
   const { id } = useParams();
@@ -35,8 +37,6 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
 
-  const [messageApi, contextHolder] = message.useMessage();
-
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -47,11 +47,11 @@ function ProductDetail() {
           setProduct(result.data);
           setSelectedImage(result.data.mainImage);
         } else {
-          message.error("Failed to load product details");
+          toast.error("Failed to load product details");
           navigate("/products");
         }
       } catch (error) {
-        message.error("Failed to load product details");
+        toast.error("Failed to load product details");
         navigate("/products");
       } finally {
         setLoading(false);
@@ -61,44 +61,43 @@ function ProductDetail() {
     fetchProduct();
   }, [id, navigate]);
 
-  const handleAddToCart = async () => {
-    console.log("🛒 Adding to cart...");
-    messageApi.success("123123");
+  const handleAddToCart = async (buyNow = false) => {
     const result = await addItem({
       productId: product.id,
       quantity: quantity,
     });
 
-    console.log("📦 Add to cart result:", result);
-
     if (result && result.success) {
-      console.log("✅ Success! Showing message...");
-      navigate("/cart");
-      message.success("Product added to cart successfully!");
-      // Wait for message to show before navigating
+      toast.success("Product added to cart successfully!");
+      if (buyNow) {
+        navigate("/cart");
+      }
     } else {
-      console.log("❌ Failed! Showing error...");
-      message.error(result?.message || "Failed to add product to cart");
+      toast.error(result?.message || "Failed to add product to cart");
     }
   };
 
-  const handleQuantityChange = (value) => {
-    setQuantity(value);
+  const handleQuantityChange = (type) => {
+    if (type === 'inc') {
+      if (quantity < product.stock) setQuantity(prev => prev + 1);
+    } else {
+      if (quantity > 1) setQuantity(prev => prev - 1);
+    }
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "100px 0" }}>
-        <Spin size="large" />
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div style={{ textAlign: "center", padding: "100px 0" }}>
-        <Title level={3}>Product not found</Title>
-        <Button type="primary" onClick={() => navigate("/products")}>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <h2 className="text-2xl font-bold">Product not found</h2>
+        <Button onClick={() => navigate("/products")}>
           Back to Products
         </Button>
       </div>
@@ -106,337 +105,181 @@ function ProductDetail() {
   }
 
   return (
-    <div style={{ padding: "20px 50px", maxWidth: "1400px", margin: "0 auto" }}>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Breadcrumb */}
-      <Breadcrumb style={{ marginBottom: "20px" }}>
-        <Breadcrumb.Item href="/">
-          <HomeOutlined />
-        </Breadcrumb.Item>
-        <Breadcrumb.Item href="/products">Products</Breadcrumb.Item>
-        <Breadcrumb.Item>
-          {product.category?.name || "Category"}
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>{product.name}</Breadcrumb.Item>
+      <Breadcrumb className="mb-8">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/" className="flex items-center gap-1">
+              <Home className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/products">Products</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink>{product.category?.name || "Category"}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{product.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
       </Breadcrumb>
 
-      <Row gutter={[32, 32]}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Left Side - Images */}
-        <Col xs={24} md={12}>
-          <div style={{ position: "sticky", top: "20px" }}>
-            {/* Main Image */}
-            <div
-              style={{
-                marginBottom: "16px",
-                border: "1px solid #f0f0f0",
-                borderRadius: "8px",
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                src={selectedImage}
-                alt={product.name}
-                style={{
-                  width: "100%",
-                  height: "500px",
-                  objectFit: "cover",
-                }}
-                preview={{
-                  mask: "Click to view",
-                }}
-              />
-            </div>
-
-            {/* Thumbnail Images */}
-            {product.images && product.images.length > 0 && (
-              <Row gutter={8}>
-                <Col span={6}>
-                  <div
-                    onClick={() => setSelectedImage(product.mainImage)}
-                    style={{
-                      cursor: "pointer",
-                      border:
-                        selectedImage === product.mainImage
-                          ? "2px solid #1890ff"
-                          : "1px solid #f0f0f0",
-                      borderRadius: "4px",
-                      overflow: "hidden",
-                      padding: "4px",
-                    }}
-                  >
-                    <img
-                      src={product.mainImage}
-                      alt="Main"
-                      style={{
-                        width: "100%",
-                        height: "80px",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                </Col>
-                {product.images.slice(0, 3).map((image, index) => (
-                  <Col span={6} key={index}>
-                    <div
-                      onClick={() => setSelectedImage(image)}
-                      style={{
-                        cursor: "pointer",
-                        border:
-                          selectedImage === image
-                            ? "2px solid #1890ff"
-                            : "1px solid #f0f0f0",
-                        borderRadius: "4px",
-                        overflow: "hidden",
-                        padding: "4px",
-                      }}
-                    >
-                      <img
-                        src={image}
-                        alt={`Thumbnail ${index + 1}`}
-                        style={{
-                          width: "100%",
-                          height: "80px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            )}
-          </div>
-        </Col>
-
-        {/* Right Side - Product Details */}
-        <Col xs={24} md={12}>
-          {/* Product Name */}
-          <Title level={2} style={{ marginBottom: "8px" }}>
-            {product.name}
-          </Title>
-
-          {/* Brand */}
-          {product.brand && (
-            <Text
-              type="secondary"
-              style={{
-                fontSize: "16px",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              Brand: <Text strong>{product.brand}</Text>
-            </Text>
-          )}
-
-          {/* Rating */}
-          <div
-            style={{
-              marginBottom: "16px",
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <Rate disabled defaultValue={4.5} allowHalf />
-            <Text type="secondary">(4.5 out of 5)</Text>
-            <Text type="secondary">836 ratings</Text>
+        <div className="space-y-4">
+          <div className="relative overflow-hidden rounded-xl border bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800">
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="w-full h-[500px] object-cover"
+            />
           </div>
 
-          {/* Best Seller Tag */}
-          <div style={{ marginBottom: "16px" }}>
-            <Tag
-              color="orange"
-              style={{ fontSize: "12px", padding: "2px 8px" }}
-            >
-              #1 Best Seller
-            </Tag>
-            <Text type="secondary" style={{ marginLeft: "8px" }}>
-              in {product.category?.name || "Category"}
-            </Text>
-          </div>
-
-          <Divider />
-
-          {/* Price */}
-          <div style={{ marginBottom: "24px" }}>
-            <Title level={2} style={{ color: "#B12704", marginBottom: "0" }}>
-              ${product.price.toFixed(2)}
-            </Title>
-            <Text type="secondary">All prices include VAT.</Text>
-          </div>
-
-          {/* Stock Status */}
-          <div style={{ marginBottom: "16px" }}>
-            {product.stock > 0 ? (
-              <Text style={{ color: "#067d62", fontSize: "18px" }}>
-                <strong>In Stock</strong>
-              </Text>
-            ) : (
-              <Text style={{ color: "#B12704", fontSize: "18px" }}>
-                <strong>Out of Stock</strong>
-              </Text>
-            )}
-          </div>
-
-          {/* Product Specifications */}
-          {product.specifications && (
-            <div
-              style={{
-                background: "#f9f9f9",
-                padding: "16px",
-                borderRadius: "8px",
-                marginBottom: "24px",
-              }}
-            >
-              <Text
-                strong
-                style={{
-                  fontSize: "16px",
-                  display: "block",
-                  marginBottom: "12px",
-                }}
+          {product.images && product.images.length > 0 && (
+            <div className="grid grid-cols-4 gap-4">
+              <div
+                onClick={() => setSelectedImage(product.mainImage)}
+                className={`cursor-pointer rounded-lg overflow-hidden border-2 ${selectedImage === product.mainImage ? 'border-primary' : 'border-transparent'} hover:border-primary/50 transition-colors`}
               >
-                Product Specifications
-              </Text>
-              <table style={{ width: "100%" }}>
-                <tbody>
-                  {product.category && (
-                    <tr>
-                      <td style={{ padding: "8px 0", width: "40%" }}>
-                        <Text type="secondary">Category</Text>
-                      </td>
-                      <td style={{ padding: "8px 0" }}>
-                        <Text>{product.category.name}</Text>
-                      </td>
-                    </tr>
-                  )}
-                  {product.brand && (
-                    <tr>
-                      <td style={{ padding: "8px 0" }}>
-                        <Text type="secondary">Brand Name</Text>
-                      </td>
-                      <td style={{ padding: "8px 0" }}>
-                        <Text>{product.brand}</Text>
-                      </td>
-                    </tr>
-                  )}
-                  <tr>
-                    <td style={{ padding: "8px 0" }}>
-                      <Text type="secondary">Material</Text>
-                    </td>
-                    <td style={{ padding: "8px 0" }}>
-                      <Text>{product.material || "Stainless Steel"}</Text>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "8px 0" }}>
-                      <Text type="secondary">Color</Text>
-                    </td>
-                    <td style={{ padding: "8px 0" }}>
-                      <Text>{product.color || "Navy"}</Text>
-                    </td>
-                  </tr>
-                  {product.capacity && (
-                    <tr>
-                      <td style={{ padding: "8px 0" }}>
-                        <Text type="secondary">Capacity</Text>
-                      </td>
-                      <td style={{ padding: "8px 0" }}>
-                        <Text>{product.capacity}</Text>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                <img src={product.mainImage} alt="Main" className="w-full h-20 object-cover" />
+              </div>
+              {product.images.slice(0, 3).map((image, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedImage(image)}
+                  className={`cursor-pointer rounded-lg overflow-hidden border-2 ${selectedImage === image ? 'border-primary' : 'border-transparent'} hover:border-primary/50 transition-colors`}
+                >
+                  <img src={image} alt={`Thumbnail ${index + 1}`} className="w-full h-20 object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Side - Details */}
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">{product.name}</h1>
+            {product.brand && (
+              <p className="text-muted-foreground text-lg">
+                Brand: <span className="font-medium text-foreground">{product.brand}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center text-yellow-500">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className={`h-5 w-5 ${star <= 4 ? 'fill-current' : star === 5 ? 'fill-current opacity-50' : ''}`} />
+              ))}
+            </div>
+            <span className="text-muted-foreground text-sm">(4.5 out of 5) • 836 ratings</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-orange-600 bg-orange-100 hover:bg-orange-200 border-0">
+              #1 Best Seller
+            </Badge>
+            <span className="text-sm text-muted-foreground">in {product.category?.name}</span>
+          </div>
+
+          <Separator />
+
+          <div>
+            <div className="text-4xl font-bold text-primary mb-1">${product.price.toFixed(2)}</div>
+            <p className="text-sm text-muted-foreground">All prices include VAT.</p>
+          </div>
+
+          <div>
+            {product.stock > 0 ? (
+              <div className="flex items-center gap-2 text-green-600 font-medium text-lg">
+                <Check className="h-5 w-5" /> In Stock
+              </div>
+            ) : (
+              <div className="text-destructive font-medium text-lg">Out of Stock</div>
+            )}
+          </div>
+
+          {/* Specifications Table look-alike */}
+          {product.specifications && (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
+              <h3 className="font-semibold mb-2">Product Specifications</h3>
+              <div className="grid grid-cols-2">
+                <span className="text-muted-foreground">Material</span>
+                <span>{product.material || "Stainless Steel"}</span>
+              </div>
+              <div className="grid grid-cols-2">
+                <span className="text-muted-foreground">Color</span>
+                <span>{product.color || "Navy"}</span>
+              </div>
+              {product.capacity && (
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Capacity</span>
+                  <span>{product.capacity}</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Quantity Selector and Add to Cart */}
-          <div
-            style={{
-              background: "#f0f2f5",
-              padding: "20px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <div style={{ marginBottom: "16px" }}>
-              <Text strong style={{ display: "block", marginBottom: "8px" }}>
-                Quantity:
-              </Text>
-              <InputNumber
-                min={1}
-                max={product.stock}
-                value={quantity}
-                onChange={handleQuantityChange}
-                style={{ width: "100px" }}
-              />
-              <Text type="secondary" style={{ marginLeft: "12px" }}>
-                ({product.stock} available)
-              </Text>
+          {/* Actions */}
+          <div className="p-6 bg-muted/30 rounded-xl border space-y-6">
+            <div className="flex items-center gap-4">
+              <span className="font-medium">Quantity:</span>
+              <div className="flex items-center">
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-r-none border-r-0" onClick={() => handleQuantityChange('dec')} disabled={quantity <= 1}>
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <div className="h-8 min-w-[3rem] px-2 flex items-center justify-center border-y bg-background text-sm font-medium">
+                  {quantity}
+                </div>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-l-none border-l-0" onClick={() => handleQuantityChange('inc')} disabled={quantity >= product.stock}>
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              <span className="text-sm text-muted-foreground">({product.stock} available)</span>
             </div>
 
-            <Button
-              type="primary"
-              size="large"
-              icon={<ShoppingCartOutlined />}
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-              block
-              style={{
-                height: "48px",
-                fontSize: "16px",
-                fontWeight: "500",
-                marginBottom: "12px",
-              }}
-            >
-              Add to Cart
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button size="lg" className="w-full" onClick={() => handleAddToCart(false)} disabled={product.stock === 0}>
+                <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+              </Button>
+              <Button size="lg" variant="secondary" className="w-full" onClick={() => handleAddToCart(true)} disabled={product.stock === 0}>
+                Buy Now
+              </Button>
+            </div>
+          </div>
 
-            <Button
-              size="large"
-              block
-              style={{
-                height: "48px",
-                fontSize: "16px",
-                fontWeight: "500",
-              }}
-              disabled={product.stock === 0}
-            >
-              Buy Now
+          <div className="flex gap-4">
+            <Button variant="outline" className="flex-1">
+              <Heart className="mr-2 h-4 w-4" /> Add to Wishlist
+            </Button>
+            <Button variant="outline" className="flex-1">
+              <Share2 className="mr-2 h-4 w-4" /> Share
             </Button>
           </div>
 
-          {/* Additional Actions */}
-          <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
-            <Button icon={<HeartOutlined />} style={{ flex: 1 }}>
-              Add to Wishlist
-            </Button>
-            <Button icon={<ShareAltOutlined />} style={{ flex: 1 }}>
-              Share
-            </Button>
-          </div>
+          <Separator />
 
-          <Divider />
-
-          {/* Product Description */}
-          <div>
-            <Title level={4}>About this item</Title>
-            <Paragraph style={{ fontSize: "14px", lineHeight: "1.6" }}>
-              {product.description ||
-                "This product features premium quality materials and excellent craftsmanship. Perfect for everyday use and makes a great gift."}
-            </Paragraph>
-
-            {/* Additional Features */}
-            <ul style={{ fontSize: "14px", lineHeight: "1.8" }}>
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold">About this item</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              {product.description || "This product features premium quality materials and excellent craftsmanship. Perfect for everyday use and makes a great gift."}
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
               <li>High-quality construction for durability</li>
               <li>Easy to clean and maintain</li>
               <li>Vacuum insulated to keep drinks hot or cold for hours</li>
               <li>Leak-proof lid for worry-free transport</li>
-              <li>Fits most cup holders</li>
             </ul>
           </div>
-        </Col>
-      </Row>
+
+        </div>
+      </div>
     </div>
   );
 }

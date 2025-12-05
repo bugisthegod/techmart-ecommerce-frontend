@@ -5,6 +5,8 @@ import { AuthProvider } from "./store/authContext";
 import { setNavigate } from "./services/api";
 import "./App.css";
 
+import { Toaster } from "@/components/ui/sonner"
+
 // Import pages (we'll create these next)
 // import Home from './pages/Home';
 import Login from "./pages/Login";
@@ -46,13 +48,14 @@ function AppContent() {
           {/* <Route path="/user" element={<UserCenter />} /> */}
         </Routes>
       </main>
+      <Toaster />
       {/* <Footer /> */}
     </div>
   );
 }
 
 function App() {
-  
+
   return (
     <AuthProvider>
       <CartProvider>

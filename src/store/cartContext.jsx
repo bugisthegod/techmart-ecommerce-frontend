@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import cartService from "../services/cartService";
-import { message } from "antd";
+
 import authService from "../services/authService";
 
 // Define all possible cart actions
@@ -8,7 +8,7 @@ const CART_ACTIONS = {
   ADD_ITEM: "ADD_ITEM",
   REMOVE_ITEM: "REMOVE_ITEM",
   UPDATE_QUANTITY: "UPDATE_QUANTITY",
-  UPDATE_ITEM_SELECTION:"UPDATE_ITEM_SELECTION",
+  UPDATE_ITEM_SELECTION: "UPDATE_ITEM_SELECTION",
   CLEAR_CART: "CLEAR_CART",
   LOAD_CART: "LOAD_CART",
   ADD_ITEM_FAILURE: "ADD_ITEM_FAILURE",
@@ -16,7 +16,7 @@ const CART_ACTIONS = {
   UPDATE_QUANTITY_FAILURE: "UPDATE_QUANTITY_FAILURE",
   CLEAR_CART_FAILURE: "CLEAR_CART_FAILURE",
   LOAD_CART_FAILURE: "LOAD_CART_FAILURE",
-  UPDATE_ITEM_SELECTION_FAILURE:"UPDATE_ITEM_SELECTION_FAILURE",
+  UPDATE_ITEM_SELECTION_FAILURE: "UPDATE_ITEM_SELECTION_FAILURE",
 };
 
 const initialState = {
@@ -60,7 +60,7 @@ function cartReducer(state, action) {
         error: null,
       };
 
-      case CART_ACTIONS.UPDATE_ITEM_SELECTION:
+    case CART_ACTIONS.UPDATE_ITEM_SELECTION:
       return {
         ...state,
         isLoading: false,
@@ -191,7 +191,7 @@ export function CartProvider({ children }) {
     }
   };
 
-  
+
   const updateItemSelection = async (cartItemId, selected) => {
     try {
       const result = await cartService.updateItemSelection(cartItemId, selected);

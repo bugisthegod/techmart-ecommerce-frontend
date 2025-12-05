@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Tag, Button, message, Spin, Empty, Tabs } from 'antd';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import orderService from '../services/orderService';
-import './Orders.css';
-
-const { TabPane } = Tabs;
+import './Orders.css'; // We'll keep this but override/remove AntD styles
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -17,11 +28,11 @@ const Orders = () => {
 
   // Order status mapping
   const ORDER_STATUS = {
-    0: { text: 'Pending Payment', color: 'orange' },
-    1: { text: 'Paid', color: 'blue' },
-    2: { text: 'Shipped', color: 'cyan' },
-    3: { text: 'Completed', color: 'green' },
-    4: { text: 'Cancelled', color: 'red' },
+    0: { text: 'Pending Payment', color: 'bg-orange-500 hover:bg-orange-600' },
+    1: { text: 'Paid', color: 'bg-blue-500 hover:bg-blue-600' },
+    2: { text: 'Shipped', color: 'bg-cyan-500 hover:bg-cyan-600' },
+    3: { text: 'Completed', color: 'bg-green-500 hover:bg-green-600' },
+    4: { text: 'Cancelled', color: 'bg-red-500 hover:bg-red-600' },
   };
 
   // Fetch orders
@@ -40,7 +51,7 @@ const Orders = () => {
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
-      message.error('Failed to load orders');
+      toast.error('Failed to load orders');
     } finally {
       setLoading(false);
     }
@@ -57,8 +68,8 @@ const Orders = () => {
   };
 
   // Handle tab change
-  const handleTabChange = (key) => {
-    setActiveTab(key);
+  const handleTabChange = (value) => {
+    setActiveTab(value);
     setCurrentPage(1); // Reset to first page when changing tabs
   };
 
@@ -71,11 +82,11 @@ const Orders = () => {
   const handleCancelOrder = async (orderId) => {
     try {
       await orderService.cancelOrder(orderId);
-      message.success('Order cancelled successfully');
+      toast.success('Order cancelled successfully');
       fetchOrders(currentPage, activeTab === 'all' ? null : parseInt(activeTab));
     } catch (error) {
       console.error('Failed to cancel order:', error);
-      message.error(error.response?.data?.message || 'Failed to cancel order');
+      toast.error(error.response?.data?.message || 'Failed to cancel order');
     }
   };
 
@@ -83,126 +94,136 @@ const Orders = () => {
   const handlePayOrder = async (orderId) => {
     try {
       await orderService.payOrder(orderId);
-      message.success('Payment successful');
+      toast.success('Payment successful');
       fetchOrders(currentPage, activeTab === 'all' ? null : parseInt(activeTab));
     } catch (error) {
       console.error('Failed to pay order:', error);
-      message.error(error.response?.data?.message || 'Payment failed');
+      toast.error(error.response?.data?.message || 'Payment failed');
     }
   };
 
-  // Table columns
-  const columns = [
-    {
-      title: 'Order No',
-      dataIndex: 'orderNo',
-      key: 'orderNo',
-      width: 200,
-    },
-    {
-      title: 'Total Amount',
-      dataIndex: 'totalAmount',
-      key: 'totalAmount',
-      render: (amount) => `$${amount?.toFixed(2)}`,
-      width: 120,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={ORDER_STATUS[status]?.color}>
-          {ORDER_STATUS[status]?.text || 'Unknown'}
-        </Tag>
-      ),
-      width: 150,
-    },
-    {
-      title: 'Items',
-      dataIndex: 'totalItems',
-      key: 'totalItems',
-      width: 80,
-    },
-    {
-      title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString(),
-      width: 120,
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <div className="order-actions">
-          <Button
-            type="link"
-            onClick={() => viewOrderDetail(record.id)}
-          >
-            View Details
-          </Button>
-          {record.status === 0 && (
-            <>
-              <Button
-                type="link"
-                onClick={() => handlePayOrder(record.id)}
-              >
-                Pay Now
-              </Button>
-              <Button
-                type="link"
-                danger
-                onClick={() => handleCancelOrder(record.id)}
-              >
-                Cancel
-              </Button>
-            </>
-          )}
-          {record.status === 1 && record.canBeCancelled && (
-            <Button
-              type="link"
-              danger
-              onClick={() => handleCancelOrder(record.id)}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div className="orders-container">
-      <Card title="My Orders" className="orders-card">
-        <Tabs activeKey={activeTab} onChange={handleTabChange}>
-          <TabPane tab="All Orders" key="all" />
-          <TabPane tab="Pending Payment" key="0" />
-          <TabPane tab="Paid" key="1" />
-          <TabPane tab="Shipped" key="2" />
-          <TabPane tab="Completed" key="3" />
-          <TabPane tab="Cancelled" key="4" />
-        </Tabs>
-
-        <Spin spinning={loading}>
-          {orders.length === 0 ? (
-            <Empty description="No orders found" />
+    <div className="container mx-auto p-4 md:p-8 max-w-7xl">
+      <Card className="bg-white/50 backdrop-blur-sm border-white/20 shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold tracking-tight">My Orders</CardTitle>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full mt-4">
+            <TabsList className="grid w-full md:w-auto grid-cols-3 md:grid-cols-6 h-auto">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="0">Pending</TabsTrigger>
+              <TabsTrigger value="1">Paid</TabsTrigger>
+              <TabsTrigger value="2">Shipped</TabsTrigger>
+              <TabsTrigger value="3">Completed</TabsTrigger>
+              <TabsTrigger value="4">Cancelled</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg">No orders found</p>
+            </div>
           ) : (
-            <Table
-              columns={columns}
-              dataSource={orders}
-              rowKey="id"
-              pagination={{
-                current: currentPage,
-                pageSize: pageSize,
-                total: total,
-                onChange: handlePageChange,
-                showSizeChanger: false,
-                showTotal: (total) => `Total ${total} orders`,
-              }}
-            />
+            <>
+              <div className="rounded-md border bg-white/40 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order No</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.orderNo}</TableCell>
+                        <TableCell>${order.totalAmount?.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge className={`${ORDER_STATUS[order.status]?.color || 'bg-gray-500'} text-white border-0`}>
+                            {ORDER_STATUS[order.status]?.text || 'Unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{order.totalItems}</TableCell>
+                        <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => viewOrderDetail(order.id)}
+                          >
+                            Details
+                          </Button>
+                          {order.status === 0 && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handlePayOrder(order.id)}
+                              >
+                                Pay Now
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleCancelOrder(order.id)}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          )}
+                          {order.status === 1 && order.canBeCancelled && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleCancelOrder(order.id)}
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              {total > pageSize && (
+                <div className="flex justify-end items-center space-x-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </>
           )}
-        </Spin>
+        </CardContent>
       </Card>
     </div>
   );
