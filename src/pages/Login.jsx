@@ -103,12 +103,12 @@ function Login() {
   return (
     <div className="min-h-screen w-full flex bg-gray-50 dark:bg-zinc-900">
       {/* Left side - Image */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-black">
+      <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-white">
         <div className="max-w-xl text-center">
           <h1 className="text-5xl font-bold text-white mb-8 tracking-tight">TechMart</h1>
           <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10">
             <img
-              src="/TechMart.png"
+              src="/whale.png"
               alt="TechMart Logo"
               className="w-full h-auto object-cover max-h-[500px]"
             />
