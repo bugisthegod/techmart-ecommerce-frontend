@@ -4,7 +4,6 @@ import type {
   RegisterData,
   User,
   AuthResult,
-  LoginResponseData,
   JwtPayload
 } from "@/types";
 
@@ -46,7 +45,7 @@ class AuthService {
       });
 
       if (response.status !== 200) {
-        throw new Error(`Register failed: ${response.msg}`);
+        throw new Error(`Register failed: ${response.data.msg}`);
       }
 
       console.log("✅ Registration successful");
@@ -84,7 +83,7 @@ class AuthService {
 
       // Check if the response status is successful
       if (response.status !== 200) {
-        throw new Error(`Login failed: ${response.msg}`);
+        throw new Error(`Login failed: ${response.data.msg}`);
       }
 
       // Extract the JWT token from the response

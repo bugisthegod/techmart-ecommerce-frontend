@@ -15,6 +15,7 @@ export interface Address {
   isDefault: number; // 1 = default, 0 = not default
   createdAt?: string;
   updatedAt?: string;
+  postalCode: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export interface AddressFormData {
   district: string;
   detailAddress: string;
   isDefault?: number;
+  postalCode: string;
 }
 
 /**

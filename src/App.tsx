@@ -1,11 +1,11 @@
 // src/App.jsx
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./store/authContext";
 import { setNavigate } from "./services/api";
 import "./App.css";
 
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
 
 // Import pages (we'll create these next)
 // import Home from './pages/Home';
@@ -55,7 +55,6 @@ function AppContent() {
 }
 
 function App() {
-
   return (
     <AuthProvider>
       <CartProvider>

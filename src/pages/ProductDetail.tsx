@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "../services/productService";
+import { getCategoryById } from "../services/categoryService";
 import { useCart } from "../store/cartContext";
 import {
   Loader2,
@@ -14,7 +15,6 @@ import {
   Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -26,13 +26,15 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
+import { Product, Category } from "@/types";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
@@ -41,11 +43,19 @@ function ProductDetail() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const result = await getProductById(id);
+        const result = await getProductById(Number(id));
 
-        if (result.success) {
+        if (result.success && result.data) {
           setProduct(result.data);
-          setSelectedImage(result.data.mainImage);
+          setSelectedImage(result.data.mainImage || "");
+          
+          // Fetch category if categoryId exists
+          if (result.data.categoryId) {
+            const categoryResult = await getCategoryById(result.data.categoryId);
+            if (categoryResult.success && categoryResult.data) {
+              setCategory(categoryResult.data);
+            }
+          }
         } else {
           toast.error("Failed to load product details");
           navigate("/products");
@@ -62,6 +72,8 @@ function ProductDetail() {
   }, [id, navigate]);
 
   const handleAddToCart = async (buyNow = false) => {
+    if (!product) return;
+    
     const result = await addItem({
       productId: product.id,
       quantity: quantity,
@@ -120,7 +132,7 @@ function ProductDetail() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink>{product.category?.name || "Category"}</BreadcrumbLink>
+            <BreadcrumbLink>{category?.name || "Category"}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -140,7 +152,7 @@ function ProductDetail() {
             />
           </div>
 
-          {product.images && product.images.length > 0 && (
+          {product.mainImage && product.mainImage.length > 0 && (
             <div className="grid grid-cols-4 gap-4">
               <div
                 onClick={() => setSelectedImage(product.mainImage)}
@@ -148,7 +160,8 @@ function ProductDetail() {
               >
                 <img src={product.mainImage} alt="Main" className="w-full h-20 object-cover" />
               </div>
-              {product.images.slice(0, 3).map((image, index) => (
+              {/* // TODO: might add more images support later */}
+              {/* {product.imageUrl.slice(0, 3).map((image, index) => (
                 <div
                   key={index}
                   onClick={() => setSelectedImage(image)}
@@ -156,7 +169,7 @@ function ProductDetail() {
                 >
                   <img src={image} alt={`Thumbnail ${index + 1}`} className="w-full h-20 object-cover" />
                 </div>
-              ))}
+              ))} */}
             </div>
           )}
         </div>
@@ -185,7 +198,7 @@ function ProductDetail() {
             <Badge variant="secondary" className="text-orange-600 bg-orange-100 hover:bg-orange-200 border-0">
               #1 Best Seller
             </Badge>
-            <span className="text-sm text-muted-foreground">in {product.category?.name}</span>
+            <span className="text-sm text-muted-foreground">in {category?.name || "Category"}</span>
           </div>
 
           <Separator />
@@ -205,7 +218,7 @@ function ProductDetail() {
             )}
           </div>
 
-          {/* Specifications Table look-alike */}
+          {/* Specifications Table look-alike
           {product.specifications && (
             <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
               <h3 className="font-semibold mb-2">Product Specifications</h3>
@@ -224,7 +237,7 @@ function ProductDetail() {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           {/* Actions */}
           <div className="p-6 bg-muted/30 rounded-xl border space-y-6">

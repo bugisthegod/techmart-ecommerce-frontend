@@ -62,7 +62,7 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [orderToken, setOrderToken] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<String>("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -139,7 +139,7 @@ function Checkout() {
         city: values.city,
         district: values.district,
         detailAddress: values.detailAddress,
-        // postalCode: values.postalCode,
+        postalCode: values.postalCode,
         isDefault: values.isDefault ? 1 : savedAddresses.length === 0 ? 1 : 0,
       };
 
@@ -234,7 +234,7 @@ function Checkout() {
                 <>
                   {!showAddressForm && savedAddresses.length > 0 && (
                     <RadioGroup
-                      value={selectedAddressId}
+                      value={selectedAddressId as string}
                       onValueChange={setSelectedAddressId}
                       className="space-y-3"
                     >
@@ -247,10 +247,10 @@ function Checkout() {
                               : "border-muted hover:bg-muted/50"
                           }`}
                         >
-                          <RadioGroupItem value={address.id} id={address.id} />
+                          <RadioGroupItem value={String(address.id)} id={String(address.id)} />
                           <div className="grid gap-1.5 leading-none w-full">
                             <Label
-                              htmlFor={address.id}
+                              htmlFor={String(address.id)}
                               className="font-semibold cursor-pointer"
                             >
                               {address.receiverName}
@@ -265,7 +265,7 @@ function Checkout() {
                               {address.province} {address.postalCode}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {address.phone}
+                              {address.receiverPhone}
                             </p>
                           </div>
                         </div>
@@ -492,17 +492,17 @@ function Checkout() {
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex gap-4 mb-4">
                     <img
-                      src={item.productImage}
-                      alt={item.productName}
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
                       className="h-16 w-16 object-cover rounded-md"
                     />
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{item.productName}</p>
+                      <p className="font-medium text-sm">{item.product.name}</p>
                       <p className="text-xs text-muted-foreground">
                         Qty: {item.quantity}
                       </p>
                       <p className="font-bold text-sm text-primary">
-                        ${(item.productPrice * item.quantity).toFixed(2)}
+                        ${(item.product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>

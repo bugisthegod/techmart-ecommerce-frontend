@@ -62,7 +62,7 @@ function Cart() {
   };
 
   // Calculate totals based on selected items
-  const _selectedCount = Object.values(selectedItems).filter(Boolean).length;
+  const selectedCount = Object.values(selectedItems).filter(Boolean).length;
   // Ensure we rely on backend/store 'selected' state mostly, but for immediate UI feedback we use local state or store data
   const selectedTotal = items.reduce((total, item) => {
     return item.selected ? total + item.product.price * item.quantity : total;

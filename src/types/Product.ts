@@ -10,9 +10,9 @@ export interface Product {
   description?: string;
   price: number;
   stock: number;
-  categoryId?: number;
+  categoryId: number;
   status?: number; // 1 = active, 0 = inactive
-  imageUrl?: string;
+  mainImage: string;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -33,6 +33,15 @@ export type {
   ProductSearchResponse,
 } from './Product';
 
+// Category types
+export type {
+  Category,
+  CategoryFilterParams,
+  CategoryPaginationResponse,
+  CategoryListResponse,
+  CategoryResponse,
+} from './category';
+
 // Cart types
 export type {
   CartItem,

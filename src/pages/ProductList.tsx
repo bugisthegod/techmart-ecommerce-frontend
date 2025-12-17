@@ -20,10 +20,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { Product } from "@/types/Product";
 
 function ProductList() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Assuming service returns total or we hardcode for now
@@ -37,11 +38,8 @@ function ProductList() {
         pageSize: pageSize
       });
       console.log("productList", result);
-      if (result.success) {
+      if (result.success && result.data) {
         setProducts(result.data.content);
-        // Assuming result.data.totalElements or similar exists
-        // For now using hardcoded total for demo since service logic wasn't fully inspected for response shape
-        // Original code used total=500 hardcoded in Pagination
         setTotalPages(Math.ceil(500 / pageSize));
       }
     } catch (error) {
@@ -55,7 +53,7 @@ function ProductList() {
     fetchProducts(currentPage);
   }, [currentPage]);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

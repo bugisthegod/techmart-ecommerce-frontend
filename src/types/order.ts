@@ -1,5 +1,4 @@
 import { ApiResponse, PagedResponse } from './api';
-import { Product } from './Product';
 
 /**
  * Order status enum
@@ -46,7 +45,7 @@ export interface Order {
   receiverName: string;
   receiverPhone: string;
   receiverAddress: string;
-  items?: OrderItem[];
+  items: OrderItem[];
   createdAt: string;
   updatedAt?: string;
 }

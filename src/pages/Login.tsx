@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,10 +14,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { LoginCredentials, RegisterData } from "@/types/auth";
 
 // Login Schema
 const loginSchema = z.object({
@@ -26,16 +32,21 @@ const loginSchema = z.object({
 });
 
 // Register Schema
-const registerSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  password: z.string().min(6, "Password must be at least 6 characters").max(20, "Password cannot exceed 20 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    username: z.string().min(1, "Username is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().optional(),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .max(20, "Password cannot exceed 20 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -65,7 +76,7 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const onLoginFinish = async (values) => {
+  const onLoginFinish = async (values: LoginCredentials) => {
     try {
       const result = await login(values.username, values.password);
       if (result.success) {
@@ -79,7 +90,7 @@ function Login() {
     }
   };
 
-  const onRegisterFinish = async (values) => {
+  const onRegisterFinish = async (values: RegisterData) => {
     try {
       const result = await register({
         username: values.username,
@@ -105,7 +116,9 @@ function Login() {
       {/* Left side - Image */}
       <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-white">
         <div className="max-w-xl text-center">
-          <h1 className="text-5xl font-bold text-white mb-8 tracking-tight">TechMart</h1>
+          <h1 className="text-5xl font-bold text-white mb-8 tracking-tight">
+            TechMart
+          </h1>
           <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10">
             <img
               src="/whale.png"
@@ -135,7 +148,10 @@ function Login() {
           <CardContent>
             {isLogin ? (
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginFinish)} className="space-y-4">
+                <form
+                  onSubmit={loginForm.handleSubmit(onLoginFinish)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={loginForm.control}
                     name="username"
@@ -143,7 +159,11 @@ function Login() {
                       <FormItem>
                         <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input id="login-username" placeholder="Enter your username" {...field} />
+                          <Input
+                            id="login-username"
+                            placeholder="Enter your username"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -183,14 +203,19 @@ function Login() {
                     )}
                   />
                   <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Sign In
                   </Button>
                 </form>
               </Form>
             ) : (
               <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterFinish)} className="space-y-4">
+                <form
+                  onSubmit={registerForm.handleSubmit(onRegisterFinish)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={registerForm.control}
                     name="username"
@@ -269,14 +294,20 @@ function Login() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Confirm your password" {...field} />
+                          <Input
+                            type="password"
+                            placeholder="Confirm your password"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Sign Up
                   </Button>
                 </form>
@@ -285,7 +316,9 @@ function Login() {
 
             <div className="mt-4 text-center text-sm">
               <span className="text-muted-foreground">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                {isLogin
+                  ? "Don't have an account? "
+                  : "Already have an account? "}
               </span>
               <Button
                 variant="link"

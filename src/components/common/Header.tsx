@@ -5,7 +5,7 @@ import { useAuth } from "../../store/authContext";
 import { useCart } from "../../store/cartContext";
 
 function Header() {
-  const { user: _user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const { totalItems } = useCart();
@@ -51,6 +51,7 @@ function Header() {
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
               {/* Replaced Profile link/logout with a cleaner dropdown or just actions */}
+              <b>Welcome! {user?.username}</b>
               <Button variant="ghost" size="sm" onClick={() => navigate('/user')} className="hidden sm:flex">
                 Profile
               </Button>
@@ -58,7 +59,8 @@ function Header() {
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
-          ) : (
+          ) : 
+          (
             <div className="flex items-center gap-2">
               <Link to="/login">
                 <Button variant="ghost" size="sm">Login</Button>
