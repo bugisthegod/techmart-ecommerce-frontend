@@ -1,16 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { productPagination } from "../services/productService";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -19,7 +10,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
 import { Product } from "@/types/Product";
 
 function ProductList() {
@@ -35,7 +26,7 @@ function ProductList() {
     try {
       const result = await productPagination({
         current: page,
-        pageSize: pageSize
+        pageSize: pageSize,
       });
       console.log("productList", result);
       if (result.success && result.data) {
@@ -55,7 +46,7 @@ function ProductList() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -68,7 +59,10 @@ function ProductList() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden border-0 shadow-md bg-white/50 backdrop-blur-sm">
+            <Card
+              key={i}
+              className="overflow-hidden border-0 shadow-md bg-white/50 backdrop-blur-sm"
+            >
               <div className="h-48 bg-muted animate-pulse" />
               <CardContent className="p-4 space-y-2">
                 <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
@@ -94,8 +88,12 @@ function ProductList() {
                   />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg truncate group-hover:text-primary transition-colors">{product.name}</h3>
-                  <p className="text-lg font-bold text-primary mt-1">${product.price}</p>
+                  <h3 className="font-semibold text-lg truncate group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-lg font-bold text-primary mt-1">
+                    ${product.price}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -106,7 +104,11 @@ function ProductList() {
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
 
@@ -123,15 +125,25 @@ function ProductList() {
                       {pageNum}
                     </PaginationLink>
                   </PaginationItem>
-                )
+                );
               })}
 
-              {totalPages > 5 && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+              {totalPages > 5 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
 
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  onClick={() =>
+                    handlePageChange(Math.min(totalPages, currentPage + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
             </PaginationContent>

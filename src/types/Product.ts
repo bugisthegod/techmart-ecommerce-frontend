@@ -11,7 +11,7 @@ export interface Product {
   price: number;
   stock: number;
   categoryId: number;
-  status?: number; // 1 = active, 0 = inactive
+  status: number; // 1 = active, 0 = inactive
   mainImage: string;
   createdAt?: string;
   updatedAt?: string;

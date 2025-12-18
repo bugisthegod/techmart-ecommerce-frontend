@@ -56,9 +56,17 @@ export interface Order {
  * Create order request data
  */
 export interface CreateOrderRequest {
-  receiverName: string;
-  receiverPhone: string;
-  receiverAddress: string;
+  /** Selected shipping address id (preferred by current frontend flow) */
+  addressId: string;
+
+  /** Delivery method / freight option */
+  freightType: string;
+
+  /** Optional legacy receiver fields (kept for compatibility) */
+  receiverName?: string;
+  receiverPhone?: string;
+  receiverAddress?: string;
+
   comment?: string;
 }
 

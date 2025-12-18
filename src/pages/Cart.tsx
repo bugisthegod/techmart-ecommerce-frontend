@@ -114,7 +114,7 @@ function Cart() {
                   </div>
                   <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-white">
                     <img
-                      src={item.product?.imageUrl || ''}
+                      src={item.product?.mainImage || ''}
                       alt={item.product?.name || 'Product'}
                       className="h-full w-full object-cover object-center"
                     />

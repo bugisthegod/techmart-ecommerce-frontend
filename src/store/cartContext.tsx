@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import cartService from "../services/cartService";
 import authService from "../services/authService";
-import type { CartState, CartAction, CartContextValue, Product } from "@/types";
+import type { CartState, CartAction, CartContextValue, AddToCartRequest } from "@/types";
 
 // Define all possible cart actions
 const CART_ACTIONS = {
@@ -28,7 +28,8 @@ const initialState: CartState = {
 };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
-  console.log("action", action.payload);
+  // Some actions carry different payload shapes; log the whole action safely.
+  console.log("action", action);
   switch (action.type) {
     case CART_ACTIONS.ADD_ITEM:
       return {
@@ -80,9 +81,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case CART_ACTIONS.LOAD_CART:
       return {
         ...state,
-        items: action.payload.items || [],
-        totalItems: action.payload.totalItems || 0,
-        totalPrice: action.payload.totalPrice || 0,
+  items: action.payload.items,
+  totalItems: action.payload.totalItems,
+  totalPrice: action.payload.totalPrice,
         isLoading: false,
         error: null,
       };
@@ -116,17 +117,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const addItem = async (product: Product) => {
+  const addItem: CartContextValue["addItem"] = async (req: AddToCartRequest) => {
     try {
-      const result = await cartService.addToCart(product);
+      const result = await cartService.addToCart(req);
 
-      if (result.success) {
+      if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.ADD_ITEM,
           payload: result.data,
         });
         return { success: true, message: result.message };
       }
+
+      // Ensure a return value even when the service responds without data.
+      return {
+        success: false,
+        message: result.message ?? "Add item failed. Please try again.",
+        errors: result.errors,
+      };
     } catch {
       const errorMessage = "Add item failed. Please try again.";
 
@@ -135,24 +143,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         payload: { message: errorMessage },
       });
 
-      return { success: false, message: errorMessage };
+  return { success: false, message: errorMessage };
     }
   };
 
-  const removeItem = async (productId: number) => {
+  const removeItem: CartContextValue["removeItem"] = async (productId: number) => {
     try {
       const result = await cartService.removeFromCart(productId);
 
-      if (result.success) {
+      if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.REMOVE_ITEM,
-          payload: {
-            items: result.data.items || [],
-            totalItems: result.data.totalItems,
-          },
+          payload: result.data,
         });
         return { success: true, message: result.message };
       }
+
+      return {
+        success: false,
+        message: result.message ?? "Remove item failed. Please try again.",
+        errors: result.errors,
+      };
     } catch {
       const errorMessage = "remove item failed. Please try again.";
 
@@ -165,20 +176,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateQuantity = async (cartItemId: number, quantity: number) => {
+  const updateQuantity: CartContextValue["updateQuantity"] = async (
+    cartItemId: number,
+    quantity: number
+  ) => {
     try {
       const result = await cartService.updateQuantity(cartItemId, quantity);
       console.log("updateQuantity result", result);
-      if (result.success) {
+      if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.UPDATE_QUANTITY,
-          payload: {
-            items: result.data.items || result.data || [],
-            totalItems: result.data.totalItems,
-          },
+          payload: result.data,
         });
         return { success: true, message: result.message };
       }
+
+      return {
+        success: false,
+        message: result.message ?? "Update quantity failed. Please try again.",
+        errors: result.errors,
+      };
     } catch {
       const errorMessage = "Update quantity failed. Please try again.";
 
@@ -192,17 +209,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-  const updateItemSelection = async (cartItemId: number, selected: number) => {
+  const updateItemSelection: CartContextValue["updateItemSelection"] = async (
+    cartItemId: number,
+    selected: number
+  ) => {
     try {
       const result = await cartService.updateItemSelection(cartItemId, selected);
       console.log("updateItemSelection result", result);
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.UPDATE_ITEM_SELECTION,
-          payload: { message: result.message }
+          payload: { message: result.message ?? "Updated item selection" }
         });
         return { success: true, message: result.message };
       }
+
+      return {
+        success: false,
+        message: result.message ?? "Update item selection failed. Please try again.",
+        errors: result.errors,
+      };
     } catch {
       const errorMessage = "Update item selection failed. Please try again.";
 
@@ -215,20 +241,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loadCart = async (): Promise<void> => {
+  const loadCart: CartContextValue["loadCart"] = async () => {
     try {
       const result = await cartService.loadCart();
       console.log("loadCartresult", result);
-      if (result.success) {
+      if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.LOAD_CART,
-          payload: {
-            items: result.data.items,
-            totalItems: result.data.totalItems,
-          },
+          payload: result.data,
         });
-        return { success: true, message: result.message };
+        return { success: true, message: result.message, data: result.data };
       }
+
+      const errorMessage = result.message ?? "Load cart failed. Please try again.";
+      dispatch({
+        type: CART_ACTIONS.LOAD_CART_FAILURE,
+        payload: { message: errorMessage },
+      });
+      return { success: false, message: errorMessage, errors: result.errors };
     } catch {
       const errorMessage = "Load cart failed. Please try again.";
       dispatch({
@@ -239,20 +269,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const clearCart = async (): Promise<void> => {
+  const clearCart: CartContextValue["clearCart"] = async () => {
     try {
       const result = await cartService.clearCart();
       if (result.success) {
-        dispatch({ type: CART_ACTIONS.CLEAR_CART });
-        return { success: true, message: result.message } as any;
+        dispatch({
+          type: CART_ACTIONS.CLEAR_CART,
+          payload: { message: result.message ?? "Cart cleared" }
+        });
+        return { success: true, message: result.message };
       }
+
+      const errorMessage = result.message ?? "Clear cart failed. Please try again.";
+      dispatch({
+        type: CART_ACTIONS.CLEAR_CART_FAILURE,
+        payload: { message: errorMessage },
+      });
+      return { success: false, message: errorMessage, errors: result.errors };
     } catch {
       const errorMessage = "Clear cart failed. Please try again.";
       dispatch({
         type: CART_ACTIONS.CLEAR_CART_FAILURE,
         payload: { message: errorMessage },
       });
-      return { success: false, message: errorMessage } as any;
+      return { success: false, message: errorMessage };
     }
   };
 

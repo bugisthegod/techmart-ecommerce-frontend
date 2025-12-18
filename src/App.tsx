@@ -21,7 +21,7 @@ import Orders from "./pages/Orders";
 
 // Import components (we'll create these next)
 import Header from "./components/common/Header";
-import Footer from "./components/common/Footer";
+// import Footer from "./components/common/Footer";
 import { CartProvider } from "./store/cartContext";
 
 function AppContent() {

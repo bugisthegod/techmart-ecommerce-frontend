@@ -1,5 +1,5 @@
 import api from "./api";
-import type { CreateOrderRequest, Order, OrderFilterParams, PagedResponse } from "@/types";
+import type { CreateOrderRequest } from "@/types";
 
 class OrderService {
   /**
@@ -24,7 +24,10 @@ class OrderService {
   /**
    * Create a new order
    */
-  async createOrder(orderData: CreateOrderRequest, orderToken: string): Promise<any> {
+  async createOrder(
+    orderData: CreateOrderRequest,
+    orderToken: string
+  ): Promise<any> {
     try {
       const userId = this.getUserId();
 
@@ -62,7 +65,11 @@ class OrderService {
   /**
    * Get all orders for the current user
    */
-  async getUserOrders(page: number = 0, size: number = 10, status: number | null = null): Promise<any> {
+  async getUserOrders(
+    page: number = 0,
+    size: number = 10,
+    status: number | null = null
+  ): Promise<any> {
     try {
       const userId = this.getUserId();
       let url = `/orders?userId=${userId}&page=${page}&size=${size}`;

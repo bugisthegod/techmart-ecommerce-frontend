@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CreditCard, MapPin, Plus, Truck, Loader2 } from "lucide-react";
@@ -51,8 +51,11 @@ const addressSchema = z.object({
   state: z.string().min(1, "State is required"),
   postalCode: z.string().min(1, "Postal Code is required"),
   phone: z.string().min(1, "Phone is required"),
-  isDefault: z.boolean().default(false),
+  // Keep required to align RHF generic type with resolver output.
+  isDefault: z.boolean(),
 });
+
+type AddressFormValues = z.infer<typeof addressSchema>;
 
 function Checkout() {
   const navigate = useNavigate();
@@ -62,12 +65,12 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [orderToken, setOrderToken] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<String>("");
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Address Form
-  const form = useForm({
+  const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
       fullName: "",
@@ -129,16 +132,18 @@ function Checkout() {
     initializeCheckout();
   }, []);
 
-  const handleSaveNewAddress = async (values: Address) => {
+  const handleSaveNewAddress: SubmitHandler<AddressFormValues> = async (values) => {
     setLoading(true);
     try {
       const addressData = {
-        receiverName: values.receiverName,
-        receiverPhone: values.receiverPhone,
-        province: values.province,
+        receiverName: values.fullName,
+        receiverPhone: values.phone,
+        // backend address model uses province/city/district/detailAddress
+        // map what we have from this simple form
+        province: values.state,
         city: values.city,
-        district: values.district,
-        detailAddress: values.detailAddress,
+        district: "",
+        detailAddress: values.address,
         postalCode: values.postalCode,
         isDefault: values.isDefault ? 1 : savedAddresses.length === 0 ? 1 : 0,
       };
@@ -242,7 +247,7 @@ function Checkout() {
                         <div
                           key={address.id}
                           className={`flex items-start space-x-3 space-y-0 rounded-md border p-4 transition-colors ${
-                            selectedAddressId === address.id
+                            selectedAddressId === String(address.id)
                               ? "border-primary bg-primary/5"
                               : "border-muted hover:bg-muted/50"
                           }`}
@@ -492,7 +497,7 @@ function Checkout() {
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex gap-4 mb-4">
                     <img
-                      src={item.product.imageUrl}
+                      src={item.product.mainImage}
                       alt={item.product.name}
                       className="h-16 w-16 object-cover rounded-md"
                     />

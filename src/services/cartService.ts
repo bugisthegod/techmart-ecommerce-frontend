@@ -1,6 +1,5 @@
-
 import api from "./api";
-import type { Product, Cart, AddToCartRequest } from "@/types";
+import type { AddToCartRequest, Cart } from "@/types";
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -10,21 +9,23 @@ interface ServiceResult<T = any> {
 }
 
 class CartService {
-  async addToCart(product: Product & { quantity?: number }): Promise<ServiceResult<Cart>> {
+  async addToCart(
+  req: AddToCartRequest
+  ): Promise<ServiceResult<Cart>> {
     try {
       const userId = this.getUserId();
       const response = await api.post(
         "/cart/add",
         {
-          productId: product.productId || product.id,
-          quantity: product.quantity || 1,
-          selected: 1,
+      productId: req.productId,
+      quantity: req.quantity,
+      selected: req.selected ?? 1,
         },
         { params: { userId } }
       );
 
       if (response.status != 200) {
-        throw new Error(`Add cartItem failed: ${response.msg}`);
+        throw new Error(`Add cartItem failed: ${response.data.msg}`);
       }
 
       console.log("Add cartItem successful");
@@ -52,7 +53,7 @@ class CartService {
       });
 
       if (response.status !== 200) {
-        throw new Error(`Item removed from cart failed: ${response.msg}`);
+        throw new Error(`Item removed from cart failed: ${response.data.msg}`);
       }
 
       console.log("Item removed from cart successfully");
@@ -73,7 +74,10 @@ class CartService {
     }
   }
 
-  async updateQuantity(cartItemId: number, quantity: number): Promise<ServiceResult<Cart>> {
+  async updateQuantity(
+    cartItemId: number,
+    quantity: number
+  ): Promise<ServiceResult<Cart>> {
     try {
       const userId = this.getUserId();
       const response = await api.put(
@@ -83,7 +87,9 @@ class CartService {
       );
 
       if (response.status !== 200) {
-        throw new Error(`Update Cart item quantity failed: ${response.msg}`);
+        throw new Error(
+          `Update Cart item quantity failed: ${response.data.msg}`
+        );
       }
       console.log("Update cart item quantity successful");
       return {
@@ -102,7 +108,10 @@ class CartService {
     }
   }
 
-  async updateItemSelection(cartItemId: number, selected: number): Promise<ServiceResult<Cart>> {
+  async updateItemSelection(
+    cartItemId: number,
+    selected: number
+  ): Promise<ServiceResult<Cart>> {
     try {
       const userId = this.getUserId();
       const response = await api.put(
@@ -112,7 +121,9 @@ class CartService {
       );
 
       if (response.status !== 200) {
-        throw new Error(`Update Cart item selection failed: ${response.msg}`);
+        throw new Error(
+          `Update Cart item selection failed: ${response.data.msg}`
+        );
       }
       console.log("Update cart item selection successful");
       return {
@@ -137,7 +148,7 @@ class CartService {
       const response = await api.get("/cart", { params: { userId: userId } });
 
       if (response.status !== 200) {
-        throw new Error(`Load Cart failed: ${response.msg}`);
+        throw new Error(`Load Cart failed: ${response.data.msg}`);
       }
 
       console.log("Load cart successful!");
@@ -184,7 +195,7 @@ class CartService {
       const response = await api.delete("/cart/clear", { params: { userId } });
 
       if (response.status !== 200) {
-        throw new Error(`Clear Cart failed: ${response.msg}`);
+        throw new Error(`Clear Cart failed: ${response.data.msg}`);
       }
 
       localStorage.removeItem("items");

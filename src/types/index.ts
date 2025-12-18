@@ -9,6 +9,8 @@ export type {
   ApiError,
   PaginationParams,
   PagedResponse,
+  OperationResult,
+  OperationResultPromise,
 } from './api';
 
 // Auth types

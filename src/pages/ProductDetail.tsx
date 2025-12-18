@@ -77,6 +77,7 @@ function ProductDetail() {
     const result = await addItem({
       productId: product.id,
       quantity: quantity,
+      selected: 0
     });
 
     if (result && result.success) {
@@ -89,7 +90,9 @@ function ProductDetail() {
     }
   };
 
-  const handleQuantityChange = (type) => {
+  const handleQuantityChange = (type: "inc" | "dec") => {
+    if (!product) return;
+
     if (type === 'inc') {
       if (quantity < product.stock) setQuantity(prev => prev + 1);
     } else {
@@ -178,11 +181,6 @@ function ProductDetail() {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2">{product.name}</h1>
-            {product.brand && (
-              <p className="text-muted-foreground text-lg">
-                Brand: <span className="font-medium text-foreground">{product.brand}</span>
-              </p>
-            )}
           </div>
 
           <div className="flex items-center gap-4">
