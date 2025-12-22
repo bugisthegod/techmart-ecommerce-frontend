@@ -23,6 +23,7 @@ import Orders from "./pages/Orders";
 import Header from "./components/common/Header";
 // import Footer from "./components/common/Footer";
 import { CartProvider } from "./store/cartContext";
+import { StripeProvider } from "./components/payment/StripeProvider";
 
 function AppContent() {
   // Store a component to api.js
@@ -42,7 +43,7 @@ function AppContent() {
           <Route path="/products" element={<ProductList />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout" element={<StripeProvider><Checkout /></StripeProvider>} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/order-success/:orderId" element={<OrderSuccess />} />
           {/* <Route path="/user" element={<UserCenter />} /> */}

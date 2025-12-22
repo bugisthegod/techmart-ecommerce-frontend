@@ -7,6 +7,9 @@ import { CreditCard, MapPin, Plus, Truck, Loader2 } from "lucide-react";
 import { useCart } from "../store/cartContext";
 import orderService from "../services/orderService";
 import addressService from "../services/addressService";
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { getPaymentManagement } from '@/api/payment-management/payment-management';
+import type { CheckoutRequest } from '@/api/models';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +45,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Address } from "@/types";
+import { CardInput } from "@/components/payment/CardInput";
 
 // Address Schema
 const addressSchema = z.object({
@@ -60,6 +64,8 @@ type AddressFormValues = z.infer<typeof addressSchema>;
 function Checkout() {
   const navigate = useNavigate();
   const { items, clearCart } = useCart();
+  const stripe = useStripe();
+  const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
@@ -68,6 +74,7 @@ function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Address Form
   const form = useForm<AddressFormValues>({
@@ -118,8 +125,12 @@ function Checkout() {
           setShowAddressForm(true);
         }
 
-        const tokenResponse = await orderService.generateOrderToken();
-        const token = tokenResponse.data || tokenResponse;
+        // Get token from localStorage first, generate only if missing
+        let token = localStorage.getItem("Idempotency-Token");
+        if (!token) {
+          const tokenResponse = await orderService.generateOrderToken();
+          token = tokenResponse.data || tokenResponse;
+        }
         if (token) setOrderToken(token);
       } catch (error) {
         console.error("Initialize checkout error:", error);
@@ -170,6 +181,7 @@ function Checkout() {
   const handlePlaceOrder = async () => {
     setShowConfirmDialog(false);
     setLoading(true);
+    setPaymentError(null);
 
     try {
       if (!selectedAddressId) {
@@ -184,20 +196,99 @@ function Checkout() {
         return;
       }
 
-      const orderData = {
-        addressId: selectedAddressId,
-        comment: `Payment method: ${paymentMethod}`,
-        freightType: "standard",
-      };
+      // Handle Stripe payment
+      if (paymentMethod === "credit_card") {
+        if (!stripe || !elements) {
+          toast.error("Payment system not loaded. Please refresh the page.");
+          setLoading(false);
+          return;
+        }
 
-      const orderResult = await orderService.createOrder(orderData, orderToken);
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) {
+          toast.error("Please enter your card details.");
+          setLoading(false);
+          return;
+        }
 
-      if (orderResult.success) {
-        toast.success("Order placed successfully!");
-        await clearCart();
-        navigate(`/order-success/${orderResult.data.id}`);
+        // Create order first
+        const orderData = {
+          addressId: selectedAddressId,
+          comment: `Payment method: ${paymentMethod}`,
+          freightType: "standard",
+        };
+
+        const orderResult = await orderService.createOrder(orderData, orderToken);
+
+        if (!orderResult.success) {
+          toast.error(orderResult.message || "Failed to create order");
+          setLoading(false);
+          return;
+        }
+
+        const orderId = orderResult.data.id;
+
+        // Create checkout session
+        const { createCheckoutSession } = getPaymentManagement();
+        const checkoutRequest: CheckoutRequest = { orderId };
+        
+        try {
+          const checkoutResponse = await createCheckoutSession(checkoutRequest, {userId: orderResult.data.userId});
+          const sessionId = checkoutResponse.data?.data?.sessionId;
+
+          if (!sessionId) {
+            toast.error("Failed to create payment session");
+            setLoading(false);
+            return;
+          }
+
+          // Confirm payment with Stripe
+          const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+            sessionId,
+            {
+              payment_method: {
+                card: cardElement,
+              },
+            }
+          );
+
+          if (stripeError) {
+            setPaymentError(stripeError.message || "Payment failed");
+            toast.error(stripeError.message || "Payment failed. Please try again.");
+            setLoading(false);
+            return;
+          }
+
+          if (paymentIntent?.status === "succeeded") {
+            toast.success("Payment successful! Order placed.");
+            await clearCart();
+            navigate(`/order-success/${orderId}`);
+          } else {
+            toast.error("Payment was not completed. Please try again.");
+            setLoading(false);
+          }
+        } catch (error) {
+          console.error("Payment error:", error);
+          toast.error("Payment processing failed. Please try again.");
+          setLoading(false);
+        }
       } else {
-        toast.error(orderResult.message || "Failed to place order");
+        // Handle non-Stripe payments (PayPal, COD)
+        const orderData = {
+          addressId: selectedAddressId,
+          comment: `Payment method: ${paymentMethod}`,
+          freightType: "standard",
+        };
+
+        const orderResult = await orderService.createOrder(orderData, orderToken);
+
+        if (orderResult.success) {
+          toast.success("Order placed successfully!");
+          await clearCart();
+          navigate(`/order-success/${orderResult.data.id}`);
+        } else {
+          toast.error(orderResult.message || "Failed to place order");
+        }
       }
     } catch (error) {
       console.error("Checkout error:", error);
@@ -478,9 +569,21 @@ function Checkout() {
                   </Label>
                 </div>
               </RadioGroup>
+              
+              {paymentMethod === "credit_card" && (
+                <div className="mt-6">
+                  <Label className="mb-2 block">Card Details</Label>
+                  <CardInput />
+                  {paymentError && (
+                    <p className="text-sm text-destructive mt-2">{paymentError}</p>
+                  )}
+                </div>
+              )}
+              
               <p className="text-sm text-muted-foreground mt-4 text-center">
-                Note: This is a demo payment. No actual payment will be
-                processed.
+                {paymentMethod === "credit_card" 
+                  ? "Your payment is secured by Stripe. Test with card 4242 4242 4242 4242."
+                  : "Note: This is a demo payment. No actual payment will be processed."}
               </p>
             </CardContent>
           </Card>

@@ -96,19 +96,10 @@ const Orders = () => {
     }
   };
 
-  // Pay order
-  const handlePayOrder = async (orderId: number) => {
-    try {
-      await orderService.payOrder(orderId);
-      toast.success("Payment successful");
-      fetchOrders(
-        currentPage,
-        activeTab === "all" ? undefined : parseInt(activeTab)
-      );
-    } catch (error: any) {
-      console.error("Failed to pay order:", error);
-      toast.error(error.response?.data?.message || "Payment failed");
-    }
+  // Pay order - Navigate to checkout/payment page
+  const handlePayOrder = (orderId: number) => {
+    // Navigate to checkout page with the order ID
+    navigate(`/checkout?orderId=${orderId}`);
   };
 
   const totalPages = Math.ceil(total / pageSize);

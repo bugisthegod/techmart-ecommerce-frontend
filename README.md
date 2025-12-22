@@ -25,7 +25,9 @@ A modern, full-featured e-commerce frontend application built with React, Vite, 
 
 ### Checkout & Orders
 - **Address Management**: Create, save, and manage multiple shipping addresses
-- **Payment Integration**: Stripe payment integration support
+- **Payment Integration**: Stripe payment integration with 3D Secure support
+- **Multiple Payment Methods**: Credit Card (Stripe), PayPal, Cash on Delivery
+- **Secure Card Input**: PCI-compliant card input with Stripe Elements
 - **Order Creation**: Generate orders with selected cart items
 - **Order Tracking**: View order history with status updates
 - **Order Details**: Detailed order information and status tracking
@@ -65,7 +67,8 @@ A modern, full-featured e-commerce frontend application built with React, Vite, 
 ### API & Integration
 - **Axios 1.11.0**: HTTP client
 - **JWT Decode**: Token parsing
-- **Stripe JS**: Payment processing
+- **Stripe JS**: Payment processing (@stripe/stripe-js, @stripe/react-stripe-js)
+- **Orval**: OpenAPI client generation
 
 ### Development Tools
 - **ESLint**: Code linting
@@ -149,7 +152,10 @@ npm install
 Create a `.env` file in the root directory:
 ```env
 VITE_API_BASE_URL=http://localhost:8080
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
+
+**Note**: For Stripe integration, you'll need a Stripe account. Get your publishable key from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys). Use test mode keys (pk_test_...) during development.
 
 4. Start the development server:
 ```bash
@@ -188,10 +194,14 @@ http://localhost:5173
 1. User selects items in cart
 2. Navigate to checkout page
 3. Select or create shipping address
-4. Choose payment method
-5. Review order summary
-6. Complete payment (Stripe integration)
-7. Order confirmation with order ID
+4. Choose payment method (Credit Card via Stripe, PayPal, or Cash on Delivery)
+5. For credit card payments:
+   - Enter card details in secure Stripe form
+   - Stripe handles 3D Secure authentication if required
+   - Test with card: 4242 4242 4242 4242 (any future expiry, any CVC)
+6. Review order summary
+7. Complete payment
+8. Order confirmation with order ID
 
 ### Order Management
 1. View all orders with filters (All, Pending, Paid, Shipped, etc.)
@@ -252,6 +262,18 @@ All routes are defined in `src/App.jsx`:
 - **Cart**: `/api/cart`, `/api/cart/add`, `/api/cart/update`, `/api/cart/remove`
 - **Orders**: `/api/orders`, `/api/orders/:id`, `/api/orders/generate-token`
 - **Addresses**: `/api/addresses`, `/api/addresses/create`
+- **Payments**: `/api/payments/checkout`, `/api/payments/order/:orderId`
+
+## 💳 Stripe Testing
+
+For testing Stripe payments in development, use these test card numbers:
+
+- **Success**: 4242 4242 4242 4242
+- **Declined**: 4000 0000 0000 0002
+- **3D Secure Required**: 4000 0025 0000 3155
+- **Insufficient Funds**: 4000 0000 0000 9995
+
+Use any future expiry date, any 3-digit CVC, and any postal code.
 
 ## 🤝 Contributing
 
