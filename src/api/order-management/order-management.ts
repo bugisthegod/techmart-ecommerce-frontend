@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   CancelOrderParams,
   CompleteOrderParams,
@@ -27,6 +21,7 @@ import type {
   ResponseResultString
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -35,153 +30,157 @@ import type {
  * Mark order as shipped (Admin only)
  * @summary Ship order
  */
-const shipOrder = <TData = AxiosResponse<ResponseResultString>>(
-    orderId: number, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/orders/${orderId}/ship`,undefined,options
-    );
-  }
-/**
+const shipOrder = (
+    orderId: number,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/orders/${orderId}/ship`, method: 'PUT'
+    },
+      );
+    }
+  /**
  * Process payment for an order
  * @summary Pay order
  */
-const payOrder = <TData = AxiosResponse<ResponseResultString>>(
+const payOrder = (
     orderId: number,
-    params: PayOrderParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/orders/${orderId}/pay`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: PayOrderParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/orders/${orderId}/pay`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * Mark order as completed
  * @summary Complete order
  */
-const completeOrder = <TData = AxiosResponse<ResponseResultString>>(
+const completeOrder = (
     orderId: number,
-    params: CompleteOrderParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/orders/${orderId}/complete`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: CompleteOrderParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/orders/${orderId}/complete`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * Cancel an order
  * @summary Cancel order
  */
-const cancelOrder = <TData = AxiosResponse<ResponseResultString>>(
+const cancelOrder = (
     orderId: number,
-    params: CancelOrderParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/orders/${orderId}/cancel`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: CancelOrderParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/orders/${orderId}/cancel`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * Get paginated list of user's orders
  * @summary Get user orders
  */
-const getUserOrders = <TData = AxiosResponse<ResponseResultPageOrderResponse>>(
-    params: GetUserOrdersParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/orders`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const getUserOrders = (
+    params: GetUserOrdersParams,
+ ) => {
+      return customAxiosInstance<ResponseResultPageOrderResponse>(
+      {url: `/api/orders`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * Create a new order from user's selected cart items
  * @summary Create order from cart
  */
-const createOrder = <TData = AxiosResponse<ResponseResultOrderResponse>>(
+const createOrder = (
     orderRequest: OrderRequest,
-    params: CreateOrderParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/orders`,
-      orderRequest,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: CreateOrderParams,
+ ) => {
+      return customAxiosInstance<ResponseResultOrderResponse>(
+      {url: `/api/orders`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: orderRequest,
+        params
+    },
+      );
+    }
+  /**
  * @summary Generate token for creating order
  */
-const getOrderToken = <TData = AxiosResponse<ResponseResultString>>(
-    params: GetOrderTokenParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/orders/generateOrderToken`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const getOrderToken = (
+    params: GetOrderTokenParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/orders/generateOrderToken`, method: 'POST',
+        params
+    },
+      );
+    }
+  /**
  * Get specific order details
  * @summary Get order by ID
  */
-const getOrderById = <TData = AxiosResponse<ResponseResultOrderResponse>>(
+const getOrderById = (
     orderId: number,
-    params: GetOrderByIdParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/orders/${orderId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: GetOrderByIdParams,
+ ) => {
+      return customAxiosInstance<ResponseResultOrderResponse>(
+      {url: `/api/orders/${orderId}`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * Get all items in an order
  * @summary Get order items
  */
-const getOrderItems = <TData = AxiosResponse<ResponseResultListOrderItemResponse>>(
-    orderId: number, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/orders/${orderId}/items`,options
-    );
-  }
-/**
+const getOrderItems = (
+    orderId: number,
+ ) => {
+      return customAxiosInstance<ResponseResultListOrderItemResponse>(
+      {url: `/api/orders/${orderId}/items`, method: 'GET'
+    },
+      );
+    }
+  /**
  * Get order details by order number
  * @summary Get order by order number
  */
-const getOrderByOrderNo = <TData = AxiosResponse<ResponseResultOrderResponse>>(
-    orderNo: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/orders/orderNo/${orderNo}`,options
-    );
-  }
-/**
+const getOrderByOrderNo = (
+    orderNo: string,
+ ) => {
+      return customAxiosInstance<ResponseResultOrderResponse>(
+      {url: `/api/orders/orderNo/${orderNo}`, method: 'GET'
+    },
+      );
+    }
+  /**
  * Get total order count for user
  * @summary Get order count
  */
-const getOrderCount = <TData = AxiosResponse<ResponseResultLong>>(
-    params: GetOrderCountParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/orders/count`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-return {shipOrder,payOrder,completeOrder,cancelOrder,getUserOrders,createOrder,getOrderToken,getOrderById,getOrderItems,getOrderByOrderNo,getOrderCount}};
-export type ShipOrderResult = AxiosResponse<ResponseResultString>
-export type PayOrderResult = AxiosResponse<ResponseResultString>
-export type CompleteOrderResult = AxiosResponse<ResponseResultString>
-export type CancelOrderResult = AxiosResponse<ResponseResultString>
-export type GetUserOrdersResult = AxiosResponse<ResponseResultPageOrderResponse>
-export type CreateOrderResult = AxiosResponse<ResponseResultOrderResponse>
-export type GetOrderTokenResult = AxiosResponse<ResponseResultString>
-export type GetOrderByIdResult = AxiosResponse<ResponseResultOrderResponse>
-export type GetOrderItemsResult = AxiosResponse<ResponseResultListOrderItemResponse>
-export type GetOrderByOrderNoResult = AxiosResponse<ResponseResultOrderResponse>
-export type GetOrderCountResult = AxiosResponse<ResponseResultLong>
+const getOrderCount = (
+    params: GetOrderCountParams,
+ ) => {
+      return customAxiosInstance<ResponseResultLong>(
+      {url: `/api/orders/count`, method: 'GET',
+        params
+    },
+      );
+    }
+  return {shipOrder,payOrder,completeOrder,cancelOrder,getUserOrders,createOrder,getOrderToken,getOrderById,getOrderItems,getOrderByOrderNo,getOrderCount}};
+export type ShipOrderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['shipOrder']>>>
+export type PayOrderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['payOrder']>>>
+export type CompleteOrderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['completeOrder']>>>
+export type CancelOrderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['cancelOrder']>>>
+export type GetUserOrdersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getUserOrders']>>>
+export type CreateOrderResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['createOrder']>>>
+export type GetOrderTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getOrderToken']>>>
+export type GetOrderByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getOrderById']>>>
+export type GetOrderItemsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getOrderItems']>>>
+export type GetOrderByOrderNoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getOrderByOrderNo']>>>
+export type GetOrderCountResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getOrderManagement>['getOrderCount']>>>

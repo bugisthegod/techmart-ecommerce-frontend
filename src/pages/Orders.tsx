@@ -15,11 +15,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import orderService from "../services/orderService";
-import { Order } from "@/types";
+import type { OrderResponse } from "@/api/models";
 
 const Orders = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
@@ -27,7 +27,7 @@ const Orders = () => {
   const [activeTab, setActiveTab] = useState("all");
 
   // Order status mapping
-  const ORDER_STATUS = {
+  const ORDER_STATUS: Record<number, { text: string; color: string }> = {
     0: { text: "Pending Payment", color: "bg-orange-500 hover:bg-orange-600" },
     1: { text: "Paid", color: "bg-blue-500 hover:bg-blue-600" },
     2: { text: "Shipped", color: "bg-cyan-500 hover:bg-cyan-600" },
@@ -160,21 +160,21 @@ const Orders = () => {
                         <TableCell>
                           <Badge
                             className={`${
-                              ORDER_STATUS[order.status]?.color || "bg-gray-500"
+                              ORDER_STATUS[order.status ?? 0]?.color || "bg-gray-500"
                             } text-white border-0`}
                           >
-                            {ORDER_STATUS[order.status]?.text || "Unknown"}
+                            {ORDER_STATUS[order.status ?? 0]?.text || "Unknown"}
                           </Badge>
                         </TableCell>
-                        <TableCell>{order.items.length}</TableCell>
+                        <TableCell>{order.items?.length ?? 0}</TableCell>
                         <TableCell>
-                          {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.createdAt ?? "").toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => viewOrderDetail(order.id)}
+                            onClick={() => viewOrderDetail(order.id ?? 0)}
                           >
                             Details
                           </Button>
@@ -182,14 +182,14 @@ const Orders = () => {
                             <>
                               <Button
                                 size="sm"
-                                onClick={() => handlePayOrder(order.id)}
+                                onClick={() => handlePayOrder(order.id ?? 0)}
                               >
                                 Pay Now
                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => handleCancelOrder(order.id)}
+                                onClick={() => handleCancelOrder(order.id ?? 0)}
                               >
                                 Cancel
                               </Button>
@@ -199,7 +199,7 @@ const Orders = () => {
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => handleCancelOrder(order.id)}
+                              onClick={() => handleCancelOrder(order.id ?? 0)}
                             >
                               Cancel
                             </Button>

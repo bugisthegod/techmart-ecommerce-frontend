@@ -26,15 +26,15 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
-import { Product, Category } from "@/types";
+import type { ProductResponse, CategoryResponse } from "@/api/models";
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [category, setCategory] = useState<Category | null>(null);
+  const [product, setProduct] = useState<ProductResponse | null>(null);
+  const [category, setCategory] = useState<CategoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
@@ -73,9 +73,9 @@ function ProductDetail() {
 
   const handleAddToCart = async (buyNow = false) => {
     if (!product) return;
-    
+
     const result = await addItem({
-      productId: product.id,
+      productId: product.id ?? 0,
       quantity: quantity,
       selected: 0
     });
@@ -94,7 +94,7 @@ function ProductDetail() {
     if (!product) return;
 
     if (type === 'inc') {
-      if (quantity < product.stock) setQuantity(prev => prev + 1);
+      if (quantity < (product.stock ?? 0)) setQuantity(prev => prev + 1);
     } else {
       if (quantity > 1) setQuantity(prev => prev - 1);
     }
@@ -158,10 +158,10 @@ function ProductDetail() {
           {product.mainImage && product.mainImage.length > 0 && (
             <div className="grid grid-cols-4 gap-4">
               <div
-                onClick={() => setSelectedImage(product.mainImage)}
+                onClick={() => setSelectedImage(product.mainImage ?? "")}
                 className={`cursor-pointer rounded-lg overflow-hidden border-2 ${selectedImage === product.mainImage ? 'border-primary' : 'border-transparent'} hover:border-primary/50 transition-colors`}
               >
-                <img src={product.mainImage} alt="Main" className="w-full h-20 object-cover" />
+                <img src={product.mainImage ?? ""} alt="Main" className="w-full h-20 object-cover" />
               </div>
               {/* // TODO: might add more images support later */}
               {/* {product.imageUrl.slice(0, 3).map((image, index) => (
@@ -202,12 +202,12 @@ function ProductDetail() {
           <Separator />
 
           <div>
-            <div className="text-4xl font-bold text-primary mb-1">${product.price.toFixed(2)}</div>
+            <div className="text-4xl font-bold text-primary mb-1">${(product.price ?? 0).toFixed(2)}</div>
             <p className="text-sm text-muted-foreground">All prices include VAT.</p>
           </div>
 
           <div>
-            {product.stock > 0 ? (
+            {(product.stock ?? 0) > 0 ? (
               <div className="flex items-center gap-2 text-green-600 font-medium text-lg">
                 <Check className="h-5 w-5" /> In Stock
               </div>
@@ -248,11 +248,11 @@ function ProductDetail() {
                 <div className="h-8 min-w-[3rem] px-2 flex items-center justify-center border-y bg-background text-sm font-medium">
                   {quantity}
                 </div>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-l-none border-l-0" onClick={() => handleQuantityChange('inc')} disabled={quantity >= product.stock}>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-l-none border-l-0" onClick={() => handleQuantityChange('inc')} disabled={quantity >= (product.stock ?? 0)}>
                   <Plus className="h-3 w-3" />
                 </Button>
               </div>
-              <span className="text-sm text-muted-foreground">({product.stock} available)</span>
+              <span className="text-sm text-muted-foreground">({product.stock ?? 0} available)</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

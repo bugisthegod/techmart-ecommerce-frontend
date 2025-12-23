@@ -4,17 +4,12 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   ResponseResultString,
   SeckillProductParams
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -23,27 +18,28 @@ import type {
  * Create a new order message for rabbitmq listener
  * @summary Create order for seckilling product
  */
-const seckillProduct = <TData = AxiosResponse<ResponseResultString>>(
+const seckillProduct = (
     productId: number,
-    params: SeckillProductParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/seckill/${productId}`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: SeckillProductParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/seckill/${productId}`, method: 'POST',
+        params
+    },
+      );
+    }
+  /**
  * Store product info and stock in Redis for seckill
  * @summary Enable product for seckill
  */
-const enableProductForSeckill = <TData = AxiosResponse<ResponseResultString>>(
-    productId: number, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/seckill/enable/${productId}`,undefined,options
-    );
-  }
-return {seckillProduct,enableProductForSeckill}};
-export type SeckillProductResult = AxiosResponse<ResponseResultString>
-export type EnableProductForSeckillResult = AxiosResponse<ResponseResultString>
+const enableProductForSeckill = (
+    productId: number,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/seckill/enable/${productId}`, method: 'POST'
+    },
+      );
+    }
+  return {seckillProduct,enableProductForSeckill}};
+export type SeckillProductResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeckillProduct>['seckillProduct']>>>
+export type EnableProductForSeckillResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getSeckillProduct>['enableProductForSeckill']>>>

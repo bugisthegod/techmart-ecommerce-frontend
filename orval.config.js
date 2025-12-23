@@ -6,7 +6,13 @@ module.exports = {
       target: './src/api/endpoints.ts',
       schemas: './src/api/models',
       client: 'axios',
-      mode: 'tags-split'  // 按 Controller 分文件
+      mode: 'tags-split',  // 按 Controller 分文件
+      override: {
+        mutator: {
+          path: './src/services/api.ts',
+          name: 'customAxiosInstance'
+        }
+      }
     }
   }
 }

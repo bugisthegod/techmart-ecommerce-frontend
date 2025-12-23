@@ -1,5 +1,5 @@
 import api from "./api";
-import type { AddToCartRequest, Cart } from "@/types";
+import type { CartItemRequest, CartResponse } from "@/api/models";
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -10,8 +10,8 @@ interface ServiceResult<T = any> {
 
 class CartService {
   async addToCart(
-  req: AddToCartRequest
-  ): Promise<ServiceResult<Cart>> {
+  req: CartItemRequest
+  ): Promise<ServiceResult<CartResponse>> {
     try {
       const userId = this.getUserId();
       const response = await api.post(
@@ -45,7 +45,7 @@ class CartService {
     }
   }
 
-  async removeFromCart(cartItemId: number): Promise<ServiceResult<Cart>> {
+  async removeFromCart(cartItemId: number): Promise<ServiceResult<CartResponse>> {
     try {
       const userId = this.getUserId();
       const response = await api.delete(`/cart/remove/${cartItemId}`, {
@@ -77,7 +77,7 @@ class CartService {
   async updateQuantity(
     cartItemId: number,
     quantity: number
-  ): Promise<ServiceResult<Cart>> {
+  ): Promise<ServiceResult<CartResponse>> {
     try {
       const userId = this.getUserId();
       const response = await api.put(
@@ -111,7 +111,7 @@ class CartService {
   async updateItemSelection(
     cartItemId: number,
     selected: number
-  ): Promise<ServiceResult<Cart>> {
+  ): Promise<ServiceResult<CartResponse>> {
     try {
       const userId = this.getUserId();
       const response = await api.put(
@@ -142,7 +142,7 @@ class CartService {
     }
   }
 
-  async loadCart(): Promise<ServiceResult<Cart>> {
+  async loadCart(): Promise<ServiceResult<CartResponse>> {
     try {
       const userId = this.getUserId();
       const response = await api.get("/cart", { params: { userId: userId } });

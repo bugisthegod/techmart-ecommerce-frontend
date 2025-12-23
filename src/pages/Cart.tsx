@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../store/cartContext";
-import {
-  Trash2,
-  Minus,
-  Plus,
-  ShoppingCart
-} from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 function Cart() {
@@ -21,18 +22,25 @@ function Cart() {
     updateQuantity,
     updateItemSelection,
   } = useCart();
-  const [selectedItems, setSelectedItems] = useState<Record<number, boolean>>({});
+  const [, setSelectedItems] = useState<Record<number, boolean>>(
+    {}
+  );
 
   // Initialize all items as selected when cart loads
   useEffect(() => {
     const initialSelected: Record<number, boolean> = {};
     items.forEach((item) => {
-      initialSelected[item.id] = item.selected === 1;
+      if (item.id !== undefined) {
+        initialSelected[item.id] = item.selected === 1;
+      }
     });
     setSelectedItems(initialSelected);
   }, [items]);
 
-  const handleQuantityChange = async (cartItemId: number, newQuantity: number) => {
+  const handleQuantityChange = async (
+    cartItemId: number,
+    newQuantity: number
+  ) => {
     if (newQuantity < 1) return;
     // Debouncing could be added here if needed, but for now direct update
     await updateQuantity(cartItemId, newQuantity);
@@ -42,7 +50,10 @@ function Cart() {
     await removeItem(productId);
   };
 
-  const handleItemSelect = async (itemId: number, checked: boolean | "indeterminate") => {
+  const handleItemSelect = async (
+    itemId: number,
+    checked: boolean | "indeterminate"
+  ) => {
     const isChecked = checked === true;
     setSelectedItems((prev) => ({
       ...prev,
@@ -55,29 +66,31 @@ function Cart() {
     const isChecked = checked === true;
     const newSelected: Record<number, boolean> = {};
     items.forEach((item) => {
-      newSelected[item.id] = isChecked;
-      updateItemSelection(item.id, isChecked ? 1 : 0); // Update backend/store
+      if (item.id !== undefined) {
+        newSelected[item.id] = isChecked;
+        updateItemSelection(item.id, isChecked ? 1 : 0); // Update backend/store
+      }
     });
     setSelectedItems(newSelected);
   };
 
   // Calculate totals based on selected items
-  const selectedCount = Object.values(selectedItems).filter(Boolean).length;
   // Ensure we rely on backend/store 'selected' state mostly, but for immediate UI feedback we use local state or store data
   const selectedTotal = items.reduce((total, item) => {
-    return item.selected ? total + item.product.price * item.quantity : total;
+    console.log("Item:", item, "Selected:", item.selected);
+    return item.selected ? total + (item.productPrice ?? 0) * (item.quantity ?? 0)
+      : total;
   }, 0);
 
-  const allSelected = items.length > 0 && items.every(item => item.selected === 1);
+  const allSelected =
+    items.length > 0 && items.every((item) => item.selected === 1);
 
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <ShoppingCart className="h-16 w-16 text-muted-foreground opacity-50" />
         <h2 className="text-2xl font-semibold">Your cart is empty</h2>
-        <Button onClick={() => navigate("/products")}>
-          Start Shopping
-        </Button>
+        <Button onClick={() => navigate("/products")}>Start Shopping</Button>
       </div>
     );
   }
@@ -97,7 +110,10 @@ function Cart() {
                   onCheckedChange={(checked) => handleSelectAll(checked)}
                   id="select-all"
                 />
-                <label htmlFor="select-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label
+                  htmlFor="select-all"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
                   Select All ({items.length} items)
                 </label>
               </div>
@@ -109,13 +125,15 @@ function Cart() {
                   <div className="flex items-start pt-2">
                     <Checkbox
                       checked={item.selected === 1} // Sync with store item state which should be updated
-                      onCheckedChange={(checked) => handleItemSelect(item.id, checked)}
+                      onCheckedChange={(checked) =>
+                        handleItemSelect(item.id ?? 0, checked)
+                      }
                     />
                   </div>
                   <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-white">
                     <img
-                      src={item.product?.mainImage || ''}
-                      alt={item.product?.name || 'Product'}
+                      src={item.productImage || ""}
+                      alt={item.productName || "Product"}
                       className="h-full w-full object-cover object-center"
                     />
                   </div>
@@ -124,12 +142,17 @@ function Cart() {
                     <div className="flex justify-between">
                       <div>
                         <h3 className="text-base font-medium text-foreground">
-                          {item.product?.name || 'Product'}
+                          {item.productName || "Product"}
                         </h3>
-                        <p className="mt-1 text-sm text-green-600 font-medium">In stock</p>
+                        <p className="mt-1 text-sm text-green-600 font-medium">
+                          In stock
+                        </p>
                       </div>
                       <p className="text-lg font-bold text-foreground">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        $
+                        {((item.productPrice ?? 0) * (item.quantity ?? 0)).toFixed(
+                              2
+                            )}
                       </p>
                     </div>
 
@@ -139,19 +162,23 @@ function Cart() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
+                          onClick={() =>
+                            handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) - 1)
+                          }
+                          disabled={(item.quantity ?? 1) <= 1}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
                         <div className="w-12 text-center text-sm font-medium">
-                          {item.quantity}
+                          {item.quantity ?? 0}
                         </div>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) + 1)
+                          }
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -161,7 +188,7 @@ function Cart() {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => handleRemoveItem(item.id ?? 0)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Remove

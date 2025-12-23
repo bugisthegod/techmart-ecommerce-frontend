@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import type { NavigateFunction } from "react-router-dom";
 import { ApiError } from "@/types";
 
@@ -140,3 +140,22 @@ api.interceptors.response.use(
 
 // Export the configured axios instance
 export default api;
+
+// Mutator function for orval-generated code
+export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
+  const source = axios.CancelToken.source();
+
+  // Strip /api prefix from orval-generated URLs since our baseURL already includes it
+  const modifiedConfig = {
+    ...config,
+    url: config.url?.replace(/^\/api/, ''),
+    cancelToken: source.token
+  };
+
+  const promise = api.request<any, T>(modifiedConfig);
+  // @ts-ignore
+  promise.cancel = () => {
+    source.cancel('Query was cancelled');
+  };
+  return promise;
+};

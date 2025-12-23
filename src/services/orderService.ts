@@ -1,5 +1,5 @@
 import api from "./api";
-import type { CreateOrderRequest } from "@/types";
+import type { OrderRequest } from "@/api/models";
 
 class OrderService {
   /**
@@ -25,7 +25,7 @@ class OrderService {
    * Create a new order
    */
   async createOrder(
-    orderData: CreateOrderRequest,
+    orderData: OrderRequest,
     orderToken: string
   ): Promise<any> {
     try {

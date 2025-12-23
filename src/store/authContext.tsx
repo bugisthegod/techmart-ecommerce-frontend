@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
-import type { AuthState, AuthAction, AuthContextValue, RegisterData } from '@/types';
+import type { AuthState, AuthAction, AuthContextValue } from '@/types';
+import type { UserRegisterRequest } from '@/api/models';
 
 /**
  * Authentication Context
@@ -185,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Registration function that components can call
    */
-  const register = async (userData: RegisterData) => {
+  const register = async (userData: UserRegisterRequest) => {
     dispatch({ type: AUTH_ACTIONS.REGISTER_START });
 
     try {

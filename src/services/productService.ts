@@ -1,5 +1,5 @@
 import api from "./api";
-import type { ProductFilterParams, PagedResponse, Product } from "@/types";
+import type { ProductResponse, PageProductResponse, FindProductsWithPaginationParams } from "@/api/models";
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -8,14 +8,14 @@ interface ServiceResult<T = any> {
 }
 
 export const productPagination = async (
-  params: ProductFilterParams = {}
-): Promise<ServiceResult<PagedResponse<Product>>> => {
+  params: FindProductsWithPaginationParams = {}
+): Promise<ServiceResult<PageProductResponse>> => {
   try {
     console.log("params", params);
     const response = await api.get("/products", {
       params: {
-        page: params.current || 1,
-        size: params.pageSize || 10,
+        page: params.page || 1,
+        size: params.size || 10,
         categoryId: params.categoryId || null,
         status: params.status || 1,
         sortBy: params.sortBy || "createdAt",
@@ -44,7 +44,7 @@ export const productPagination = async (
 
 export const searchProductByName = async (
   name: string
-): Promise<ServiceResult<Product[]>> => {
+): Promise<ServiceResult<ProductResponse[]>> => {
   try {
     const response = await api.get(`/products/search`, {
       params: { name },
@@ -71,7 +71,7 @@ export const searchProductByName = async (
 
 export const getProductById = async (
   id: number
-): Promise<ServiceResult<Product>> => {
+): Promise<ServiceResult<ProductResponse>> => {
   try {
     const response = await api.get(`/products/${id}`);
 

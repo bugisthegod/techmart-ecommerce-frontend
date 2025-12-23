@@ -1,5 +1,5 @@
 import api from "./api";
-import type { AddressFormData } from "@/types";
+import type { AddressRequest } from "@/api/models";
 
 class AddressService {
   /**
@@ -33,7 +33,7 @@ class AddressService {
   /**
    * Create a new address
    */
-  async createAddress(addressData: AddressFormData): Promise<any> {
+  async createAddress(addressData: AddressRequest): Promise<any> {
     try {
       const userId = this.getUserId();
       const response = await api.post(
@@ -52,7 +52,7 @@ class AddressService {
    */
   async updateAddress(
     addressId: number,
-    addressData: AddressFormData
+    addressData: AddressRequest
   ): Promise<any> {
     try {
       const userId = this.getUserId();
