@@ -1,5 +1,5 @@
 import api from './api';
-import type { Category } from '@/types/category';
+import type { CategoryResponse } from '@/api/models';
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -12,7 +12,7 @@ interface ServiceResult<T = any> {
  */
 export const getCategoryById = async (
   id: number
-): Promise<ServiceResult<Category>> => {
+): Promise<ServiceResult<CategoryResponse>> => {
   try {
     const response = await api.get(`/categories/${id}`);
 
@@ -38,7 +38,7 @@ export const getCategoryById = async (
 /**
  * Fetch all categories
  */
-export const getAllCategories = async (): Promise<ServiceResult<Category[]>> => {
+export const getAllCategories = async (): Promise<ServiceResult<CategoryResponse[]>> => {
   try {
     const response = await api.get('/categories');
 

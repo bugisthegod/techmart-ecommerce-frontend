@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   ResponseResultLoginResponse,
   ResponseResultString,
@@ -18,6 +12,7 @@ import type {
   UserRegisterRequest
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -26,61 +21,68 @@ import type {
  * Create a new user account
  * @summary Register new user
  */
-const register = <TData = AxiosResponse<ResponseResultString>>(
-    userRegisterRequest: UserRegisterRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/users/register`,
-      userRegisterRequest,options
-    );
-  }
-/**
+const register = (
+    userRegisterRequest: UserRegisterRequest,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/users/register`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: userRegisterRequest
+    },
+      );
+    }
+  /**
  * Invalidate JWT token and logout user
  * @summary User logout
  */
-const logout = <TData = AxiosResponse<ResponseResultString>>(
-     options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/users/logout`,undefined,options
-    );
-  }
-/**
+const logout = (
+    
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/users/logout`, method: 'POST'
+    },
+      );
+    }
+  /**
  * Authenticate user and return JWT token
  * @summary User login
  */
-const login = <TData = AxiosResponse<ResponseResultLoginResponse>>(
-    userLoginRequest: UserLoginRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/users/login`,
-      userLoginRequest,options
-    );
-  }
-/**
+const login = (
+    userLoginRequest: UserLoginRequest,
+ ) => {
+      return customAxiosInstance<ResponseResultLoginResponse>(
+      {url: `/api/users/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: userLoginRequest
+    },
+      );
+    }
+  /**
  * @summary Find user by username
  */
-const findUserByUsername = <TData = AxiosResponse<ResponseResultUserResponse>>(
-    username: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/users/${username}`,options
-    );
-  }
-/**
+const findUserByUsername = (
+    username: string,
+ ) => {
+      return customAxiosInstance<ResponseResultUserResponse>(
+      {url: `/api/users/${username}`, method: 'GET'
+    },
+      );
+    }
+  /**
  * Test UserController
  * @summary A test api
  */
-const test = <TData = AxiosResponse<ResponseResultString>>(
-     options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/users/test`,options
-    );
-  }
-return {register,logout,login,findUserByUsername,test}};
-export type RegisterResult = AxiosResponse<ResponseResultString>
-export type LogoutResult = AxiosResponse<ResponseResultString>
-export type LoginResult = AxiosResponse<ResponseResultLoginResponse>
-export type FindUserByUsernameResult = AxiosResponse<ResponseResultUserResponse>
-export type TestResult = AxiosResponse<ResponseResultString>
+const test = (
+    
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/users/test`, method: 'GET'
+    },
+      );
+    }
+  return {register,logout,login,findUserByUsername,test}};
+export type RegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUserManagement>['register']>>>
+export type LogoutResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUserManagement>['logout']>>>
+export type LoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUserManagement>['login']>>>
+export type FindUserByUsernameResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUserManagement>['findUserByUsername']>>>
+export type TestResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUserManagement>['test']>>>

@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   CheckoutRequest,
   CreateCheckoutSessionParams,
@@ -20,6 +14,7 @@ import type {
   ResponseResultRefundResponse
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -28,45 +23,48 @@ import type {
  * Process refund for a payment (Admin only)
  * @summary Process refund
  */
-const processRefund = <TData = AxiosResponse<ResponseResultRefundResponse>>(
+const processRefund = (
     paymentId: number,
-    refundRequest: RefundRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/payments/${paymentId}/refund`,
-      refundRequest,options
-    );
-  }
-/**
+    refundRequest: RefundRequest,
+ ) => {
+      return customAxiosInstance<ResponseResultRefundResponse>(
+      {url: `/api/payments/${paymentId}/refund`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: refundRequest
+    },
+      );
+    }
+  /**
  * Create Stripe Checkout session for an order
  * @summary Create checkout session
  */
-const createCheckoutSession = <TData = AxiosResponse<ResponseResultCheckoutResponse>>(
+const createCheckoutSession = (
     checkoutRequest: CheckoutRequest,
-    params: CreateCheckoutSessionParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/payments/checkout`,
-      checkoutRequest,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: CreateCheckoutSessionParams,
+ ) => {
+      return customAxiosInstance<ResponseResultCheckoutResponse>(
+      {url: `/api/payments/checkout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: checkoutRequest,
+        params
+    },
+      );
+    }
+  /**
  * Retrieve payment information for an order
  * @summary Get payment by order ID
  */
-const getPaymentByOrderId = <TData = AxiosResponse<ResponseResultPaymentResponse>>(
+const getPaymentByOrderId = (
     orderId: number,
-    params: GetPaymentByOrderIdParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/payments/order/${orderId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-return {processRefund,createCheckoutSession,getPaymentByOrderId}};
-export type ProcessRefundResult = AxiosResponse<ResponseResultRefundResponse>
-export type CreateCheckoutSessionResult = AxiosResponse<ResponseResultCheckoutResponse>
-export type GetPaymentByOrderIdResult = AxiosResponse<ResponseResultPaymentResponse>
+    params: GetPaymentByOrderIdParams,
+ ) => {
+      return customAxiosInstance<ResponseResultPaymentResponse>(
+      {url: `/api/payments/order/${orderId}`, method: 'GET',
+        params
+    },
+      );
+    }
+  return {processRefund,createCheckoutSession,getPaymentByOrderId}};
+export type ProcessRefundResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['processRefund']>>>
+export type CreateCheckoutSessionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['createCheckoutSession']>>>
+export type GetPaymentByOrderIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['getPaymentByOrderId']>>>

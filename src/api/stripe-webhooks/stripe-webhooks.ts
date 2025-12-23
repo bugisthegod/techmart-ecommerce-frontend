@@ -4,12 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -18,14 +13,15 @@ import type {
  * Process incoming Stripe webhook events
  * @summary Handle Stripe webhook
  */
-const handleStripeWebhook = <TData = AxiosResponse<string>>(
-    handleStripeWebhookBody: string, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/webhooks/stripe`,
-      handleStripeWebhookBody,{
-    ...options,}
-    );
-  }
-return {handleStripeWebhook}};
-export type HandleStripeWebhookResult = AxiosResponse<string>
+const handleStripeWebhook = (
+    handleStripeWebhookBody: string,
+ ) => {
+      return customAxiosInstance<string>(
+      {url: `/api/webhooks/stripe`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: handleStripeWebhookBody
+    },
+      );
+    }
+  return {handleStripeWebhook}};
+export type HandleStripeWebhookResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getStripeWebhooks>['handleStripeWebhook']>>>

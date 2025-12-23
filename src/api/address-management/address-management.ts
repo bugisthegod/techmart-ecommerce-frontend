@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   AddressRequest,
   CreateAddressParams,
@@ -26,6 +20,7 @@ import type {
   UpdateAddressParams
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -34,120 +29,122 @@ import type {
  * Get specific address details
  * @summary Get address by ID
  */
-const getAddressById = <TData = AxiosResponse<ResponseResultAddressResponse>>(
+const getAddressById = (
     addressId: number,
-    params: GetAddressByIdParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/addresses/${addressId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: GetAddressByIdParams,
+ ) => {
+      return customAxiosInstance<ResponseResultAddressResponse>(
+      {url: `/api/addresses/${addressId}`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * Update an existing address
  * @summary Update address
  */
-const updateAddress = <TData = AxiosResponse<ResponseResultAddressResponse>>(
+const updateAddress = (
     addressId: number,
     addressRequest: AddressRequest,
-    params: UpdateAddressParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/addresses/${addressId}`,
-      addressRequest,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: UpdateAddressParams,
+ ) => {
+      return customAxiosInstance<ResponseResultAddressResponse>(
+      {url: `/api/addresses/${addressId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: addressRequest,
+        params
+    },
+      );
+    }
+  /**
  * Delete a shipping address
  * @summary Delete address
  */
-const deleteAddress = <TData = AxiosResponse<ResponseResultString>>(
+const deleteAddress = (
     addressId: number,
-    params: DeleteAddressParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.delete(
-      `/api/addresses/${addressId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: DeleteAddressParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/addresses/${addressId}`, method: 'DELETE',
+        params
+    },
+      );
+    }
+  /**
  * Set an address as default
  * @summary Set default address
  */
-const setDefaultAddress = <TData = AxiosResponse<ResponseResultString>>(
+const setDefaultAddress = (
     addressId: number,
-    params: SetDefaultAddressParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/addresses/${addressId}/default`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: SetDefaultAddressParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/addresses/${addressId}/default`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * Get all addresses for a user
  * @summary Get user addresses
  */
-const getUserAddresses = <TData = AxiosResponse<ResponseResultListAddressResponse>>(
-    params: GetUserAddressesParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/addresses`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const getUserAddresses = (
+    params: GetUserAddressesParams,
+ ) => {
+      return customAxiosInstance<ResponseResultListAddressResponse>(
+      {url: `/api/addresses`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * Add a new shipping address for user
  * @summary Create new address
  */
-const createAddress = <TData = AxiosResponse<ResponseResultAddressResponse>>(
+const createAddress = (
     addressRequest: AddressRequest,
-    params: CreateAddressParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/addresses`,
-      addressRequest,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: CreateAddressParams,
+ ) => {
+      return customAxiosInstance<ResponseResultAddressResponse>(
+      {url: `/api/addresses`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addressRequest,
+        params
+    },
+      );
+    }
+  /**
  * Get user's default shipping address
  * @summary Get default address
  */
-const getDefaultAddress = <TData = AxiosResponse<ResponseResultAddressResponse>>(
-    params: GetDefaultAddressParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/addresses/default`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const getDefaultAddress = (
+    params: GetDefaultAddressParams,
+ ) => {
+      return customAxiosInstance<ResponseResultAddressResponse>(
+      {url: `/api/addresses/default`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * Get total number of addresses for user
  * @summary Get address count
  */
-const getAddressCount = <TData = AxiosResponse<ResponseResultLong>>(
-    params: GetAddressCountParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/addresses/count`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-return {getAddressById,updateAddress,deleteAddress,setDefaultAddress,getUserAddresses,createAddress,getDefaultAddress,getAddressCount}};
-export type GetAddressByIdResult = AxiosResponse<ResponseResultAddressResponse>
-export type UpdateAddressResult = AxiosResponse<ResponseResultAddressResponse>
-export type DeleteAddressResult = AxiosResponse<ResponseResultString>
-export type SetDefaultAddressResult = AxiosResponse<ResponseResultString>
-export type GetUserAddressesResult = AxiosResponse<ResponseResultListAddressResponse>
-export type CreateAddressResult = AxiosResponse<ResponseResultAddressResponse>
-export type GetDefaultAddressResult = AxiosResponse<ResponseResultAddressResponse>
-export type GetAddressCountResult = AxiosResponse<ResponseResultLong>
+const getAddressCount = (
+    params: GetAddressCountParams,
+ ) => {
+      return customAxiosInstance<ResponseResultLong>(
+      {url: `/api/addresses/count`, method: 'GET',
+        params
+    },
+      );
+    }
+  return {getAddressById,updateAddress,deleteAddress,setDefaultAddress,getUserAddresses,createAddress,getDefaultAddress,getAddressCount}};
+export type GetAddressByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['getAddressById']>>>
+export type UpdateAddressResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['updateAddress']>>>
+export type DeleteAddressResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['deleteAddress']>>>
+export type SetDefaultAddressResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['setDefaultAddress']>>>
+export type GetUserAddressesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['getUserAddresses']>>>
+export type CreateAddressResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['createAddress']>>>
+export type GetDefaultAddressResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['getDefaultAddress']>>>
+export type GetAddressCountResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAddressManagement>['getAddressCount']>>>

@@ -1,78 +1,23 @@
 /**
- * Central export point for all type definitions
- * Import types from here: import { User, Product, CartItem } from '@/types'
+ * Central export point for frontend-specific type definitions
+ * For DTO types, import directly from '@/api/models'
  */
 
-// API types
+// Frontend utility types
 export type {
-  ApiResponse,
-  ApiError,
-  PaginationParams,
-  PagedResponse,
   OperationResult,
   OperationResultPromise,
-} from './api';
+  ApiError,
+  JwtPayload,
+} from './utils';
 
-// Auth types
+// Context types (React state management)
 export type {
-  User,
-  RegisterData,
-  LoginCredentials,
-  LoginResponseData,
-  LoginResponse,
   AuthState,
   AuthAction,
   AuthContextValue,
   AuthResult,
-  JwtPayload,
-} from './auth';
-
-// Product types
-export type {
-  Product,
-  ProductFilterParams,
-  ProductPaginationResponse,
-  ProductSearchResponse,
-} from './Product';
-
-// Category types
-export type {
-  Category,
-  CategoryFilterParams,
-  CategoryPaginationResponse,
-  CategoryListResponse,
-  CategoryResponse,
-} from './category';
-
-// Cart types
-export type {
-  CartItem,
-  Cart,
   CartState,
   CartAction,
   CartContextValue,
-  AddToCartRequest,
-  CartResponse,
-} from './cart';
-
-// Order types
-export {
-  OrderStatus,
-} from './order';
-
-export type {
-  OrderItem,
-  Order,
-  CreateOrderRequest,
-  OrderFilterParams,
-  OrderResponse,
-  OrdersPaginationResponse,
-} from './order';
-
-// Address types
-export type {
-  Address,
-  AddressFormData,
-  AddressResponse,
-  AddressesResponse,
-} from './address';
+} from './context';

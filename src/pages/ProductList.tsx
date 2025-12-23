@@ -11,11 +11,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Product } from "@/types/Product";
+import type { ProductResponse } from "@/api/models";
 
 function ProductList() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1); // Assuming service returns total or we hardcode for now
@@ -25,12 +25,12 @@ function ProductList() {
     setLoading(true);
     try {
       const result = await productPagination({
-        current: page,
-        pageSize: pageSize,
+        page: page,
+        size: pageSize,
       });
       console.log("productList", result);
       if (result.success && result.data) {
-        setProducts(result.data.content);
+        setProducts(result.data.content ?? []);
         setTotalPages(Math.ceil(500 / pageSize));
       }
     } catch (error) {

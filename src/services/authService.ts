@@ -1,11 +1,9 @@
 import api from "./api";
 import { jwtDecode } from "jwt-decode";
-import type {
-  RegisterData,
-  User,
-  AuthResult,
-  JwtPayload
-} from "@/types";
+import type { AuthResult, JwtPayload } from "@/types";
+import type { UserRegisterRequest } from "@/api/models/userRegisterRequest";
+import type { UserResponse } from "@/api/models/userResponse";
+import type { LoginResponse } from "@/api/models/loginResponse";
 
 /**
  * Authentication Service
@@ -31,7 +29,7 @@ class AuthService {
    * User Registration
    * Creates a new user account in the system
    */
-  async register(userData: RegisterData): Promise<AuthServiceResult> {
+  async register(userData: UserRegisterRequest): Promise<AuthServiceResult> {
     try {
       console.log("🔐 Attempting user registration for:", userData.username);
 
@@ -88,7 +86,7 @@ class AuthService {
 
       // Extract the JWT token from the response
       // Your Spring Boot backend returns this in the LoginResponse DTO
-      const { token, userInfo } = response.data;
+      const { token, userInfo } = response.data as LoginResponse;
 
       if (token && userInfo) {
         // Store the JWT token for future API requests
@@ -220,7 +218,7 @@ class AuthService {
   /**
    * Get current user data
    */
-  getCurrentUser(): User | null {
+  getCurrentUser(): UserResponse | null {
     try {
       const userData = localStorage.getItem("user_data");
       return userData ? JSON.parse(userData) : null;
@@ -242,7 +240,7 @@ class AuthService {
   /**
    * Update user profile information
    */
-  async updateProfile(updatedUserData: Partial<User>): Promise<AuthServiceResult> {
+  async updateProfile(updatedUserData: Partial<UserResponse>): Promise<AuthServiceResult> {
     try {
       console.log("🔐 Updating user profile");
 

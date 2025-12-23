@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import cartService from "../services/cartService";
 import authService from "../services/authService";
-import type { CartState, CartAction, CartContextValue, AddToCartRequest } from "@/types";
+import type { CartState, CartAction, CartContextValue } from "@/types";
+import type { CartItemRequest } from "@/api/models";
 
 // Define all possible cart actions
 const CART_ACTIONS = {
@@ -22,7 +23,9 @@ const CART_ACTIONS = {
 const initialState: CartState = {
   items: [],
   totalItems: 0,
-  totalPrice: 0,
+  totalAmount: 0,
+  selectedAmount: 0,
+  selectedCount: 0,
   isLoading: false,
   error: null,
 };
@@ -34,9 +37,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case CART_ACTIONS.ADD_ITEM:
       return {
         ...state,
-        items: action.payload.items,
-        totalItems: action.payload.totalItems,
-        totalPrice: action.payload.totalPrice,
+        items: action.payload.items || [],
+        totalItems: action.payload.totalItems || 0,
+        totalAmount: action.payload.totalAmount || 0,
+        selectedAmount: action.payload.selectedAmount || 0,
+        selectedCount: action.payload.selectedCount || 0,
         isLoading: false,
         error: null,
       };
@@ -44,9 +49,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case CART_ACTIONS.REMOVE_ITEM:
       return {
         ...state,
-        items: action.payload.items,
-        totalItems: action.payload.totalItems,
-        totalPrice: action.payload.totalPrice,
+        items: action.payload.items || [],
+        totalItems: action.payload.totalItems || 0,
+        totalAmount: action.payload.totalAmount || 0,
+        selectedAmount: action.payload.selectedAmount || 0,
+        selectedCount: action.payload.selectedCount || 0,
         isLoading: false,
         error: null,
       };
@@ -54,9 +61,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case CART_ACTIONS.UPDATE_QUANTITY:
       return {
         ...state,
-        items: action.payload.items,
-        totalItems: action.payload.totalItems,
-        totalPrice: action.payload.totalPrice,
+        items: action.payload.items || [],
+        totalItems: action.payload.totalItems || 0,
+        totalAmount: action.payload.totalAmount || 0,
+        selectedAmount: action.payload.selectedAmount || 0,
+        selectedCount: action.payload.selectedCount || 0,
         isLoading: false,
         error: null,
       };
@@ -73,7 +82,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         ...state,
         items: [],
         totalItems: 0,
-        totalPrice: 0,
+        totalAmount: 0,
+        selectedAmount: 0,
+        selectedCount: 0,
         isLoading: false,
         error: null,
       };
@@ -81,9 +92,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case CART_ACTIONS.LOAD_CART:
       return {
         ...state,
-  items: action.payload.items,
-  totalItems: action.payload.totalItems,
-  totalPrice: action.payload.totalPrice,
+        items: action.payload.items || [],
+        totalItems: action.payload.totalItems || 0,
+        totalAmount: action.payload.totalAmount || 0,
+        selectedAmount: action.payload.selectedAmount || 0,
+        selectedCount: action.payload.selectedCount || 0,
         isLoading: false,
         error: null,
       };
@@ -117,7 +130,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const addItem: CartContextValue["addItem"] = async (req: AddToCartRequest) => {
+  const addItem: CartContextValue["addItem"] = async (req: CartItemRequest) => {
     try {
       const result = await cartService.addToCart(req);
 
@@ -299,7 +312,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value: CartContextValue = {
     items: state.items,
     totalItems: state.totalItems,
-    totalPrice: state.totalPrice,
+    totalAmount: state.totalAmount,
+    selectedAmount: state.selectedAmount,
+    selectedCount: state.selectedCount,
     isLoading: state.isLoading,
     error: state.error,
     addItem,

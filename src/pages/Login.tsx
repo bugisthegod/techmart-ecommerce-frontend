@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { LoginCredentials, RegisterData } from "@/types/auth";
+import type { UserLoginRequest, UserRegisterRequest } from "@/api/models";
 
 // Login Schema
 const loginSchema = z.object({
@@ -76,7 +76,7 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const onLoginFinish = async (values: LoginCredentials) => {
+  const onLoginFinish = async (values: UserLoginRequest) => {
     try {
       const result = await login(values.username, values.password);
       if (result.success) {
@@ -90,7 +90,7 @@ function Login() {
     }
   };
 
-  const onRegisterFinish = async (values: RegisterData) => {
+  const onRegisterFinish = async (values: UserRegisterRequest) => {
     try {
       const result = await register({
         username: values.username,

@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   AddToCartParams,
   CartItemRequest,
@@ -22,6 +16,7 @@ import type {
   UpdateItemSelectionParams
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -29,84 +24,85 @@ import type {
 /**
  * @summary Update cart item quantity
  */
-const updateCartItem = <TData = AxiosResponse<ResponseResultCartResponse>>(
+const updateCartItem = (
     cartItemId: number,
-    params: UpdateCartItemParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/cart/update/${cartItemId}`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: UpdateCartItemParams,
+ ) => {
+      return customAxiosInstance<ResponseResultCartResponse>(
+      {url: `/api/cart/update/${cartItemId}`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * @summary Update item selection status
  */
-const updateItemSelection = <TData = AxiosResponse<ResponseResultString>>(
+const updateItemSelection = (
     cartItemId: number,
-    params: UpdateItemSelectionParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/cart/select/${cartItemId}`,undefined,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: UpdateItemSelectionParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/cart/select/${cartItemId}`, method: 'PUT',
+        params
+    },
+      );
+    }
+  /**
  * @summary Add product to cart
  */
-const addToCart = <TData = AxiosResponse<ResponseResultCartResponse>>(
+const addToCart = (
     cartItemRequest: CartItemRequest,
-    params: AddToCartParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/cart/add`,
-      cartItemRequest,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: AddToCartParams,
+ ) => {
+      return customAxiosInstance<ResponseResultCartResponse>(
+      {url: `/api/cart/add`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: cartItemRequest,
+        params
+    },
+      );
+    }
+  /**
  * @summary Get user cart
  */
-const getCart = <TData = AxiosResponse<ResponseResultCartResponse>>(
-    params: GetCartParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/cart`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const getCart = (
+    params: GetCartParams,
+ ) => {
+      return customAxiosInstance<ResponseResultCartResponse>(
+      {url: `/api/cart`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * @summary Remove item from cart
  */
-const removeFromCart = <TData = AxiosResponse<ResponseResultCartResponse>>(
+const removeFromCart = (
     cartItemId: number,
-    params: RemoveFromCartParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.delete(
-      `/api/cart/remove/${cartItemId}`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+    params: RemoveFromCartParams,
+ ) => {
+      return customAxiosInstance<ResponseResultCartResponse>(
+      {url: `/api/cart/remove/${cartItemId}`, method: 'DELETE',
+        params
+    },
+      );
+    }
+  /**
  * @summary Clear user cart
  */
-const clearCart = <TData = AxiosResponse<ResponseResultString>>(
-    params: ClearCartParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.delete(
-      `/api/cart/clear`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-return {updateCartItem,updateItemSelection,addToCart,getCart,removeFromCart,clearCart}};
-export type UpdateCartItemResult = AxiosResponse<ResponseResultCartResponse>
-export type UpdateItemSelectionResult = AxiosResponse<ResponseResultString>
-export type AddToCartResult = AxiosResponse<ResponseResultCartResponse>
-export type GetCartResult = AxiosResponse<ResponseResultCartResponse>
-export type RemoveFromCartResult = AxiosResponse<ResponseResultCartResponse>
-export type ClearCartResult = AxiosResponse<ResponseResultString>
+const clearCart = (
+    params: ClearCartParams,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/cart/clear`, method: 'DELETE',
+        params
+    },
+      );
+    }
+  return {updateCartItem,updateItemSelection,addToCart,getCart,removeFromCart,clearCart}};
+export type UpdateCartItemResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['updateCartItem']>>>
+export type UpdateItemSelectionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['updateItemSelection']>>>
+export type AddToCartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['addToCart']>>>
+export type GetCartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['getCart']>>>
+export type RemoveFromCartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['removeFromCart']>>>
+export type ClearCartResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getShoppingCartManagement>['clearCart']>>>

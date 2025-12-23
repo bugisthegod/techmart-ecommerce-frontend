@@ -4,12 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import * as axios from 'axios';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   FindProductsWithPaginationParams,
   ProductRequest,
@@ -20,6 +14,7 @@ import type {
   SearchProductsParams
 } from '.././models';
 
+import { customAxiosInstance } from '../../services/api';
 
 
 
@@ -27,74 +22,80 @@ import type {
 /**
  * @summary Find product by ID
  */
-const findProductById = <TData = AxiosResponse<ResponseResultProductResponse>>(
-    id: number, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/products/${id}`,options
-    );
-  }
-/**
+const findProductById = (
+    id: number,
+ ) => {
+      return customAxiosInstance<ResponseResultProductResponse>(
+      {url: `/api/products/${id}`, method: 'GET'
+    },
+      );
+    }
+  /**
  * @summary Update the product
  */
-const updateProduct = <TData = AxiosResponse<ResponseResultProductResponse>>(
+const updateProduct = (
     id: number,
-    productRequest: ProductRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.put(
-      `/api/products/${id}`,
-      productRequest,options
-    );
-  }
-/**
+    productRequest: ProductRequest,
+ ) => {
+      return customAxiosInstance<ResponseResultProductResponse>(
+      {url: `/api/products/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: productRequest
+    },
+      );
+    }
+  /**
  * @summary Delete the product by ID
  */
-const deleteProduct = <TData = AxiosResponse<ResponseResultString>>(
-    id: number, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.delete(
-      `/api/products/${id}`,options
-    );
-  }
-/**
+const deleteProduct = (
+    id: number,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/products/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  /**
  * @summary Create new product
  */
-const createProduct = <TData = AxiosResponse<ResponseResultString>>(
-    productRequest: ProductRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/api/products/createProduct`,
-      productRequest,options
-    );
-  }
-/**
+const createProduct = (
+    productRequest: ProductRequest,
+ ) => {
+      return customAxiosInstance<ResponseResultString>(
+      {url: `/api/products/createProduct`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: productRequest
+    },
+      );
+    }
+  /**
  * @summary Find products with pagination
  */
-const findProductsWithPagination = <TData = AxiosResponse<ResponseResultPageProductResponse>>(
-    params?: FindProductsWithPaginationParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/products`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-/**
+const findProductsWithPagination = (
+    params?: FindProductsWithPaginationParams,
+ ) => {
+      return customAxiosInstance<ResponseResultPageProductResponse>(
+      {url: `/api/products`, method: 'GET',
+        params
+    },
+      );
+    }
+  /**
  * @summary Search products by Name
  */
-const searchProducts = <TData = AxiosResponse<ResponseResultListProductResponse>>(
-    params: SearchProductsParams, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/api/products/search`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-return {findProductById,updateProduct,deleteProduct,createProduct,findProductsWithPagination,searchProducts}};
-export type FindProductByIdResult = AxiosResponse<ResponseResultProductResponse>
-export type UpdateProductResult = AxiosResponse<ResponseResultProductResponse>
-export type DeleteProductResult = AxiosResponse<ResponseResultString>
-export type CreateProductResult = AxiosResponse<ResponseResultString>
-export type FindProductsWithPaginationResult = AxiosResponse<ResponseResultPageProductResponse>
-export type SearchProductsResult = AxiosResponse<ResponseResultListProductResponse>
+const searchProducts = (
+    params: SearchProductsParams,
+ ) => {
+      return customAxiosInstance<ResponseResultListProductResponse>(
+      {url: `/api/products/search`, method: 'GET',
+        params
+    },
+      );
+    }
+  return {findProductById,updateProduct,deleteProduct,createProduct,findProductsWithPagination,searchProducts}};
+export type FindProductByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['findProductById']>>>
+export type UpdateProductResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['updateProduct']>>>
+export type DeleteProductResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['deleteProduct']>>>
+export type CreateProductResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['createProduct']>>>
+export type FindProductsWithPaginationResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['findProductsWithPagination']>>>
+export type SearchProductsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getProductManagement>['searchProducts']>>>

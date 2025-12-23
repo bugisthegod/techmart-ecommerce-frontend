@@ -7,9 +7,8 @@ import { CreditCard, MapPin, Plus, Truck, Loader2 } from "lucide-react";
 import { useCart } from "../store/cartContext";
 import orderService from "../services/orderService";
 import addressService from "../services/addressService";
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import { getPaymentManagement } from '@/api/payment-management/payment-management';
-import type { CheckoutRequest } from '@/api/models';
+import { getPaymentManagement } from "@/api/payment-management/payment-management";
+import type { CheckoutRequest } from "@/api/models";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,8 +43,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Address } from "@/types";
-import { CardInput } from "@/components/payment/CardInput";
+import type { AddressResponse } from "@/api/models";
 
 // Address Schema
 const addressSchema = z.object({
@@ -64,17 +62,14 @@ type AddressFormValues = z.infer<typeof addressSchema>;
 function Checkout() {
   const navigate = useNavigate();
   const { items, clearCart } = useCart();
-  const stripe = useStripe();
-  const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [orderToken, setOrderToken] = useState<string | null>(null);
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<AddressResponse[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Address Form
   const form = useForm<AddressFormValues>({
@@ -93,7 +88,7 @@ function Checkout() {
   // Calculate totals
   const selectedItems = items.filter((item) => item.selected === 1);
   const subtotal = selectedItems.reduce(
-    (total, item) => total + item.product.price * item.quantity,
+    (total, item) => total + (item.productPrice ?? 0) * (item.quantity ?? 0),
     0
   );
   const shipping = subtotal > 50 ? 0 : 5.99;
@@ -115,23 +110,23 @@ function Checkout() {
         if (addresses && addresses.length > 0) {
           setSavedAddresses(addresses);
           const defaultAddress = addresses.find(
-            (addr: Address) => addr.isDefault === 1
+            (addr: AddressResponse) => addr.isDefault === 1
           );
           setSelectedAddressId(
-            defaultAddress ? defaultAddress.id : addresses[0].id
+            String(defaultAddress ? defaultAddress.id : addresses[0].id ?? "")
           );
         } else {
           setSavedAddresses([]);
           setShowAddressForm(true);
         }
 
-        // Get token from localStorage first, generate only if missing
-        let token = localStorage.getItem("Idempotency-Token");
-        if (!token) {
-          const tokenResponse = await orderService.generateOrderToken();
-          token = tokenResponse.data || tokenResponse;
+        // Get fresh token from backend
+        const tokenResponse = await orderService.generateOrderToken();
+        const token = tokenResponse.data || tokenResponse;
+        if (token) {
+          setOrderToken(token);
+          localStorage.setItem("Idempotency-Token", token);
         }
-        if (token) setOrderToken(token);
       } catch (error) {
         console.error("Initialize checkout error:", error);
         setShowAddressForm(true);
@@ -143,7 +138,9 @@ function Checkout() {
     initializeCheckout();
   }, []);
 
-  const handleSaveNewAddress: SubmitHandler<AddressFormValues> = async (values) => {
+  const handleSaveNewAddress: SubmitHandler<AddressFormValues> = async (
+    values
+  ) => {
     setLoading(true);
     try {
       const addressData = {
@@ -181,7 +178,6 @@ function Checkout() {
   const handlePlaceOrder = async () => {
     setShowConfirmDialog(false);
     setLoading(true);
-    setPaymentError(null);
 
     try {
       if (!selectedAddressId) {
@@ -196,99 +192,64 @@ function Checkout() {
         return;
       }
 
-      // Handle Stripe payment
+      // Create order data
+      const orderData = {
+        addressId: parseInt(selectedAddressId),
+        comment: `Payment method: ${paymentMethod}`,
+        freightType: "standard",
+      };
+
+      // Step 1: Create the order
+      const orderResult = await orderService.createOrder(orderData, orderToken);
+
+      if (!orderResult.data || orderResult.status !== 200) {
+        toast.error(orderResult.msg || "Failed to create order");
+        setLoading(false);
+        return;
+      }
+
+      const orderId = orderResult.data.id;
+      const userId = orderResult.data.userId;
+
+      // Handle different payment methods
       if (paymentMethod === "credit_card") {
-        if (!stripe || !elements) {
-          toast.error("Payment system not loaded. Please refresh the page.");
-          setLoading(false);
-          return;
-        }
-
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-          toast.error("Please enter your card details.");
-          setLoading(false);
-          return;
-        }
-
-        // Create order first
-        const orderData = {
-          addressId: selectedAddressId,
-          comment: `Payment method: ${paymentMethod}`,
-          freightType: "standard",
-        };
-
-        const orderResult = await orderService.createOrder(orderData, orderToken);
-
-        if (!orderResult.success) {
-          toast.error(orderResult.message || "Failed to create order");
-          setLoading(false);
-          return;
-        }
-
-        const orderId = orderResult.data.id;
-
-        // Create checkout session
+        // Step 2: Create Stripe Checkout Session
         const { createCheckoutSession } = getPaymentManagement();
         const checkoutRequest: CheckoutRequest = { orderId };
-        
-        try {
-          const checkoutResponse = await createCheckoutSession(checkoutRequest, {userId: orderResult.data.userId});
-          const sessionId = checkoutResponse.data?.data?.sessionId;
 
-          if (!sessionId) {
+        try {
+          const checkoutResponse = await createCheckoutSession(
+            checkoutRequest,
+            { userId }
+          );
+
+          // Extract the Stripe Checkout URL from response
+          const stripeUrl = checkoutResponse.data?.checkoutUrl;
+
+          if (!stripeUrl) {
             toast.error("Failed to create payment session");
             setLoading(false);
             return;
           }
 
-          // Confirm payment with Stripe
-          const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-            sessionId,
-            {
-              payment_method: {
-                card: cardElement,
-              },
-            }
-          );
-
-          if (stripeError) {
-            setPaymentError(stripeError.message || "Payment failed");
-            toast.error(stripeError.message || "Payment failed. Please try again.");
-            setLoading(false);
-            return;
-          }
-
-          if (paymentIntent?.status === "succeeded") {
-            toast.success("Payment successful! Order placed.");
-            await clearCart();
-            navigate(`/order-success/${orderId}`);
-          } else {
-            toast.error("Payment was not completed. Please try again.");
-            setLoading(false);
-          }
+          // Step 3: Redirect to Stripe Checkout
+          toast.success("Redirecting to payment...");
+          
+          // Clear cart before redirecting to prevent issues
+          await clearCart();
+          
+          // Redirect to Stripe's hosted checkout page
+          window.location.href = stripeUrl;
         } catch (error) {
-          console.error("Payment error:", error);
-          toast.error("Payment processing failed. Please try again.");
+          console.error("Checkout session error:", error);
+          toast.error("Failed to initialize payment. Please try again.");
           setLoading(false);
         }
       } else {
         // Handle non-Stripe payments (PayPal, COD)
-        const orderData = {
-          addressId: selectedAddressId,
-          comment: `Payment method: ${paymentMethod}`,
-          freightType: "standard",
-        };
-
-        const orderResult = await orderService.createOrder(orderData, orderToken);
-
-        if (orderResult.success) {
-          toast.success("Order placed successfully!");
-          await clearCart();
-          navigate(`/order-success/${orderResult.data.id}`);
-        } else {
-          toast.error(orderResult.message || "Failed to place order");
-        }
+        toast.success("Order placed successfully!");
+        await clearCart();
+        navigate(`/order-success/${orderId}`);
       }
     } catch (error) {
       console.error("Checkout error:", error);
@@ -343,7 +304,10 @@ function Checkout() {
                               : "border-muted hover:bg-muted/50"
                           }`}
                         >
-                          <RadioGroupItem value={String(address.id)} id={String(address.id)} />
+                          <RadioGroupItem
+                            value={String(address.id)}
+                            id={String(address.id)}
+                          />
                           <div className="grid gap-1.5 leading-none w-full">
                             <Label
                               htmlFor={String(address.id)}
@@ -534,7 +498,7 @@ function Checkout() {
                   />
                   <Label
                     htmlFor="credit_card"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                   >
                     <CreditCard className="mb-3 h-6 w-6" />
                     Credit Card
@@ -548,9 +512,9 @@ function Checkout() {
                   />
                   <Label
                     htmlFor="paypal"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                   >
-                    <span className="mb-3 text-xl font-bold">Paypal</span>
+                    <span className="mb-3 text-xl font-bold">P</span>
                     PayPal
                   </Label>
                 </div>
@@ -562,28 +526,20 @@ function Checkout() {
                   />
                   <Label
                     htmlFor="cod"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                   >
                     <Truck className="mb-3 h-6 w-6" />
                     Cash on Delivery
                   </Label>
                 </div>
               </RadioGroup>
-              
-              {paymentMethod === "credit_card" && (
-                <div className="mt-6">
-                  <Label className="mb-2 block">Card Details</Label>
-                  <CardInput />
-                  {paymentError && (
-                    <p className="text-sm text-destructive mt-2">{paymentError}</p>
-                  )}
-                </div>
-              )}
-              
+
               <p className="text-sm text-muted-foreground mt-4 text-center">
-                {paymentMethod === "credit_card" 
-                  ? "Your payment is secured by Stripe. Test with card 4242 4242 4242 4242."
-                  : "Note: This is a demo payment. No actual payment will be processed."}
+                {paymentMethod === "credit_card"
+                  ? "You'll be redirected to Stripe's secure checkout page to complete your payment."
+                  : paymentMethod === "paypal"
+                  ? "You'll be redirected to PayPal to complete your payment."
+                  : "Pay with cash when your order is delivered."}
               </p>
             </CardContent>
           </Card>
@@ -600,17 +556,22 @@ function Checkout() {
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex gap-4 mb-4">
                     <img
-                      src={item.product.mainImage}
-                      alt={item.product.name}
+                      src={item.productImage || ""}
+                      alt={item.productName || "Product"}
                       className="h-16 w-16 object-cover rounded-md"
                     />
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{item.product.name}</p>
+                      <p className="font-medium text-sm">
+                        {item.productName || "Product"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Qty: {item.quantity}
+                        Qty: {item.quantity ?? 0}
                       </p>
                       <p className="font-bold text-sm text-primary">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        $
+                        {(
+                          (item.productPrice ?? 0) * (item.quantity ?? 0)
+                        ).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -648,6 +609,7 @@ function Checkout() {
                   loading || showAddressForm || savedAddresses.length === 0
                 }
               >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Place Order
               </Button>
             </CardFooter>
@@ -661,6 +623,8 @@ function Checkout() {
             <AlertDialogTitle>Confirm Order</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to place this order for ${total.toFixed(2)}?
+              {paymentMethod === "credit_card" &&
+                " You'll be redirected to Stripe to complete payment."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
