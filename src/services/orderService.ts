@@ -1,5 +1,6 @@
 import api from "./api";
 import type { OrderRequest } from "@/api/models";
+import { logger } from "@/lib/logger";
 
 class OrderService {
   /**
@@ -16,7 +17,7 @@ class OrderService {
       localStorage.setItem("Idempotency-Token", response.data);
       return response;
     } catch (error) {
-      console.error("Generate order token error:", error);
+      logger.error("Generate order token error:", error);
       throw error;
     }
   }
@@ -43,7 +44,7 @@ class OrderService {
       });
       return response;
     } catch (error) {
-      console.error("Create order error:", error);
+      logger.error("Create order error:", error);
       throw error;
     }
   }
@@ -57,7 +58,7 @@ class OrderService {
       const response = await api.get(`/orders/${orderId}?userId=${userId}`);
       return response;
     } catch (error) {
-      console.error("Get order error:", error);
+      logger.error("Get order error:", error);
       throw error;
     }
   }
@@ -79,7 +80,7 @@ class OrderService {
       const response = await api.get(url);
       return response;
     } catch (error) {
-      console.error("Get user orders error:", error);
+      logger.error("Get user orders error:", error);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ class OrderService {
       const response = await api.put(`/orders/${orderId}/pay?userId=${userId}`);
       return response;
     } catch (error) {
-      console.error("Pay order error:", error);
+      logger.error("Pay order error:", error);
       throw error;
     }
   }
@@ -109,7 +110,7 @@ class OrderService {
       );
       return response;
     } catch (error) {
-      console.error("Cancel order error:", error);
+      logger.error("Cancel order error:", error);
       throw error;
     }
   }
@@ -120,13 +121,13 @@ class OrderService {
   getUserId(): number | null {
     const userData = localStorage.getItem("user_data");
     if (!userData) {
-      console.error("User data not found in localStorage");
+      logger.error("User data not found in localStorage");
       return null;
     }
     try {
       return JSON.parse(userData).id || null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   }

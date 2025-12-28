@@ -1,5 +1,6 @@
 import api from "./api";
 import type { ProductResponse, PageProductResponse, FindProductsWithPaginationParams } from "@/api/models";
+import { logger } from "@/lib/logger";
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -11,7 +12,7 @@ export const productPagination = async (
   params: FindProductsWithPaginationParams = {}
 ): Promise<ServiceResult<PageProductResponse>> => {
   try {
-    console.log("params", params);
+    logger.log("params", params);
     const response = await api.get("/products", {
       params: {
         page: params.page || 1,
@@ -34,7 +35,7 @@ export const productPagination = async (
       message: "Failed to fetch products",
     };
   } catch (error: any) {
-    console.error("❌ Product pagination failed:", error);
+    logger.error("❌ Product pagination failed:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch products",
@@ -61,7 +62,7 @@ export const searchProductByName = async (
       message: "Failed to search products",
     };
   } catch (error: any) {
-    console.error("❌ Product search failed:", error);
+    logger.error("❌ Product search failed:", error);
     return {
       success: false,
       message: error.message || "Failed to search products",
@@ -86,7 +87,7 @@ export const getProductById = async (
       message: "Failed to fetch product",
     };
   } catch (error: any) {
-    console.error("❌ Product fetch failed:", error);
+    logger.error("❌ Product fetch failed:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch product",

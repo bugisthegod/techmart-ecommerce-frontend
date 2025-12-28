@@ -1,5 +1,6 @@
 import api from "./api";
 import type { CartItemRequest, CartResponse } from "@/api/models";
+import { logger } from "@/lib/logger";
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -28,14 +29,14 @@ class CartService {
         throw new Error(`Add cartItem failed: ${response.data.msg}`);
       }
 
-      console.log("Add cartItem successful");
+      logger.log("Add cartItem successful");
       return {
         success: true,
         message: "Add cartItem successful!",
         data: response.data,
       };
     } catch (error: any) {
-      console.log("Add cartItem Failed: ", error);
+      logger.log("Add cartItem Failed: ", error);
 
       return {
         success: false,
@@ -56,7 +57,7 @@ class CartService {
         throw new Error(`Item removed from cart failed: ${response.data.msg}`);
       }
 
-      console.log("Item removed from cart successfully");
+      logger.log("Item removed from cart successfully");
 
       return {
         success: true,
@@ -64,7 +65,7 @@ class CartService {
         data: response.data,
       };
     } catch (error: any) {
-      console.error("❌ Item removed from cart failed:", error);
+      logger.error("❌ Item removed from cart failed:", error);
 
       return {
         success: false,
@@ -91,7 +92,7 @@ class CartService {
           `Update Cart item quantity failed: ${response.data.msg}`
         );
       }
-      console.log("Update cart item quantity successful");
+      logger.log("Update cart item quantity successful");
       return {
         success: true,
         message: "Update cart item quantity successful!",
@@ -125,7 +126,7 @@ class CartService {
           `Update Cart item selection failed: ${response.data.msg}`
         );
       }
-      console.log("Update cart item selection successful");
+      logger.log("Update cart item selection successful");
       return {
         success: true,
         message: "Update cart item selection successful!",
@@ -151,14 +152,14 @@ class CartService {
         throw new Error(`Load Cart failed: ${response.data.msg}`);
       }
 
-      console.log("Load cart successful!");
+      logger.log("Load cart successful!");
       return {
         success: true,
         message: "Load cart successful!",
         data: response.data,
       };
     } catch (error: any) {
-      console.error("❌ Load cart failed:", error);
+      logger.error("❌ Load cart failed:", error);
 
       // Return a standardized error format that your components can handle consistently
       return {
@@ -175,13 +176,13 @@ class CartService {
   getUserId(): number | null {
     const userData = localStorage.getItem("user_data");
     if (!userData) {
-      console.error("User data not found in localStorage");
+      logger.error("User data not found in localStorage");
       return null;
     }
     try {
       return JSON.parse(userData).id || null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   }
@@ -199,14 +200,14 @@ class CartService {
       }
 
       localStorage.removeItem("items");
-      console.log("Clear cart successful!");
+      logger.log("Clear cart successful!");
       return {
         success: true,
         message: "Clear cart successful!",
         data: response.data,
       };
     } catch (error: any) {
-      console.error("❌ Clear cart failed:", error);
+      logger.error("❌ Clear cart failed:", error);
 
       return {
         success: false,

@@ -3,6 +3,7 @@ import cartService from "../services/cartService";
 import authService from "../services/authService";
 import type { CartState, CartAction, CartContextValue } from "@/types";
 import type { CartItemRequest } from "@/api/models";
+import { logger } from "@/lib/logger";
 
 // Define all possible cart actions
 const CART_ACTIONS = {
@@ -32,7 +33,7 @@ const initialState: CartState = {
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   // Some actions carry different payload shapes; log the whole action safely.
-  console.log("action", action);
+  logger.log("action", action);
   switch (action.type) {
     case CART_ACTIONS.ADD_ITEM:
       return {
@@ -195,7 +196,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const result = await cartService.updateQuantity(cartItemId, quantity);
-      console.log("updateQuantity result", result);
+      logger.log("updateQuantity result", result);
       if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.UPDATE_QUANTITY,
@@ -228,7 +229,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const result = await cartService.updateItemSelection(cartItemId, selected);
-      console.log("updateItemSelection result", result);
+      logger.log("updateItemSelection result", result);
       if (result.success) {
         dispatch({
           type: CART_ACTIONS.UPDATE_ITEM_SELECTION,
@@ -257,7 +258,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const loadCart: CartContextValue["loadCart"] = async () => {
     try {
       const result = await cartService.loadCart();
-      console.log("loadCartresult", result);
+      logger.log("loadCartresult", result);
       if (result.success && result.data) {
         dispatch({
           type: CART_ACTIONS.LOAD_CART,

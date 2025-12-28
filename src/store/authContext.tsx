@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import authService from '../services/authService';
 import type { AuthState, AuthAction, AuthContextValue } from '@/types';
 import type { UserRegisterRequest } from '@/api/models';
+import { logger } from '@/lib/logger';
 
 /**
  * Authentication Context
@@ -152,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await authService.login(username, password);
 
-      console.log("after login success",result);
+      logger.log("after login success",result);
       
       if (result.success) {
         dispatch({

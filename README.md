@@ -87,39 +87,39 @@ ecommerce-frontend/
 │   ├── assets/             # App assets
 │   ├── components/
 │   │   ├── common/         # Shared components
-│   │   │   ├── Header.jsx  # App header with cart badge
-│   │   │   └── Footer.jsx  # App footer
+│   │   │   ├── Header.tsx  # App header with cart badge
+│   │   │   └── Footer.tsx  # App footer
 │   │   └── ui/             # shadcn/ui components
-│   │       ├── button.jsx
-│   │       ├── card.jsx
-│   │       ├── form.jsx
-│   │       ├── input.jsx
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       ├── form.tsx
+│   │       ├── input.tsx
 │   │       └── ... (20+ components)
 │   ├── lib/
-│   │   └── utils.js        # Utility functions
+│   │   └── utils.ts        # Utility functions
 │   ├── pages/
-│   │   ├── Login.jsx       # Login & registration page
-│   │   ├── ProductList.jsx # Product catalog with pagination
-│   │   ├── ProductDetail.jsx # Individual product page
-│   │   ├── Cart.jsx        # Shopping cart management
-│   │   ├── Checkout.jsx    # Checkout with address & payment
-│   │   ├── Orders.jsx      # Order history & management
-│   │   └── OrderSuccess.jsx # Order confirmation page
+│   │   ├── Login.tsx       # Login & registration page
+│   │   ├── ProductList.tsx # Product catalog with pagination
+│   │   ├── ProductDetail.tsx # Individual product page
+│   │   ├── Cart.tsx        # Shopping cart management
+│   │   ├── Checkout.tsx    # Checkout with address & payment
+│   │   ├── Orders.tsx      # Order history & management
+│   │   └── OrderSuccess.tsx # Order confirmation page
 │   ├── services/
-│   │   ├── api.js          # Axios instance & interceptors
-│   │   ├── authService.js  # Authentication API calls
-│   │   ├── productService.js # Product API calls
-│   │   ├── cartService.js  # Cart API calls
-│   │   ├── orderService.js # Order API calls
-│   │   └── addressService.js # Address API calls
+│   │   ├── api.ts          # Axios instance & interceptors
+│   │   ├── authService.ts  # Authentication API calls
+│   │   ├── productService.ts # Product API calls
+│   │   ├── cartService.ts  # Cart API calls
+│   │   ├── orderService.ts # Order API calls
+│   │   └── addressService.ts # Address API calls
 │   ├── store/
-│   │   ├── authContext.jsx # Authentication state management
-│   │   └── cartContext.jsx # Cart state management
+│   │   ├── authContext.tsx # Authentication state management
+│   │   └── cartContext.tsx # Cart state management
 │   ├── types/
 │   │   └── Product.ts      # TypeScript type definitions
-│   ├── App.jsx             # Main app component
+│   ├── App.tsx             # Main app component
 │   ├── App.css             # App styles
-│   ├── main.jsx            # App entry point
+│   ├── main.tsx            # App entry point
 │   └── index.css           # Global styles
 ├── components.json         # shadcn/ui configuration
 ├── tailwind.config.js      # Tailwind configuration
@@ -149,13 +149,23 @@ npm install
 ```
 
 3. Configure environment variables:
-Create a `.env` file in the root directory:
-```env
-VITE_API_BASE_URL=http://localhost:8080
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+Copy the example environment file and configure it:
+```bash
+cp .env.example .env
 ```
 
-**Note**: For Stripe integration, you'll need a Stripe account. Get your publishable key from the [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys). Use test mode keys (pk_test_...) during development.
+Then edit `.env` with your actual values:
+```env
+VITE_API_BASE_URL=http://localhost:8080
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_actual_stripe_key
+```
+
+**Important Notes**:
+- The `.env.example` file contains detailed documentation for each variable
+- Never commit your `.env` file to version control (already in `.gitignore`)
+- For Stripe: Sign up at [Stripe](https://stripe.com), then get your test key from [API Keys](https://dashboard.stripe.com/test/apikeys)
+- Use test mode keys (starting with `pk_test_`) during development
 
 4. Start the development server:
 ```bash
@@ -173,6 +183,157 @@ http://localhost:5173
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+- `npm run generate-api` - Generate API client from OpenAPI spec
+
+## 🔒 Security Considerations
+
+### Current Security Status
+
+**⚠️ IMPORTANT**: This application has several security considerations that should be addressed before production deployment:
+
+#### Authentication & Token Storage
+- **JWT tokens are stored in localStorage**: While functional, this approach is vulnerable to XSS attacks. For production, consider:
+  - Moving to httpOnly cookies for token storage
+  - Implementing refresh token rotation
+  - Adding Content Security Policy (CSP) headers
+
+#### Development Artifacts
+- **Console.log statements**: ✅ **FIXED** - All console statements now use development-only logger
+  - 77 console statements replaced with `logger` utility that only outputs in development
+  - Production builds have zero console output, preventing data leakage
+  - See `CONSOLE_CLEANUP.md` for details
+
+#### Input Validation
+- **Client-side validation only**: Current form validation happens only in the frontend
+  - Backend should also validate all inputs (quantities, IDs, user data)
+  - Implement sanitization for numeric inputs to prevent manipulation
+
+#### Recommendations for Production
+1. **Implement Error Boundaries**: Add React error boundaries to prevent full app crashes
+2. **Route Protection**: Add route guards for protected pages (checkout, orders)
+3. **CSRF Protection**: If migrating to cookies, implement CSRF token validation
+4. **Rate Limiting**: Add debouncing for sensitive operations
+5. **Environment Variables**: Never commit real API keys or secrets to version control
+
+### Test Card Numbers (Stripe Development)
+For testing payments in development mode:
+- **Success**: 4242 4242 4242 4242
+- **Declined**: 4000 0000 0000 0002
+- **3D Secure**: 4000 0025 0000 3155
+- **Insufficient Funds**: 4000 0000 0000 9995
+
+Use any future expiry date, any 3-digit CVC, and any postal code.
+
+## 🧪 Testing Status
+
+**Current Status**: ⚠️ **No test coverage**
+
+This project currently has **zero automated tests**. For production deployment, implementing comprehensive testing is critical.
+
+### Recommended Testing Strategy
+
+#### 1. Unit Tests (Priority: High)
+- Service layer functions (`authService`, `cartService`, `orderService`)
+- Utility functions (`lib/utils`)
+- Form validation schemas
+- API interceptors and error handling
+
+#### 2. Integration Tests (Priority: High)
+- Context providers (`AuthContext`, `CartContext`)
+- API communication flows
+- Authentication flow (login → token storage → session restore)
+- Cart management (add → update → checkout)
+
+#### 3. E2E Tests (Priority: Medium)
+- Critical user journeys:
+  - Login → Browse products → Add to cart → Checkout → Order success
+  - User registration → Email verification
+  - Order tracking and management
+
+### Recommended Testing Stack
+```json
+{
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "playwright": "^1.40.0"
+  }
+}
+```
+
+### Test Coverage Goals
+- **Minimum for Production**: 60% coverage on critical paths
+- **Target**: 80% overall coverage
+- **Critical**: 100% coverage on authentication and payment flows
+
+## ⚠️ Known Issues & Limitations
+
+### High Priority Issues
+1. **No Error Boundaries**: Application crashes propagate to white screen instead of graceful fallback
+2. **Unsafe Logout**: `authService.logout()` doesn't await API response, potentially leaving server-side session active
+3. **Missing Route Guards**: Users can manually navigate to protected routes without authentication
+4. **Race Condition**: Cart may load before authentication is fully restored on page refresh
+
+### Medium Priority Issues
+1. **No Lazy Loading**: All route components load eagerly, increasing initial bundle size
+2. **Magic Numbers**: Hard-coded values (tax rate 0.1, free shipping threshold 50) should be constants
+3. **Inconsistent Error Handling**: No centralized error logging strategy
+4. **Missing Input Sanitization**: Quantity inputs can accept negative or extremely large numbers
+
+### Low Priority Issues
+1. **Console Logs in Production**: Debugging statements not wrapped in environment checks
+2. **Unused Variables**: TypeScript warnings for unused destructured variables
+3. **Missing JSDoc**: Service methods lack documentation comments
+
+### Performance Considerations
+- **Bundle Size**: Current dist folder is 2.4MB (acceptable, but can be optimized)
+- **No Bundle Analysis**: Consider adding `rollup-plugin-visualizer` to identify large dependencies
+- **Header Re-renders**: Component re-renders on every cart/auth state change
+
+## 🚀 Production Deployment Checklist
+
+Before deploying to production, ensure you complete the following:
+
+### Critical (Must Do)
+- [x] Remove or environment-gate all `console.log` statements (✅ Completed - See `CONSOLE_CLEANUP.md`)
+- [ ] Implement React Error Boundary components
+- [ ] Add proper route guards for protected pages
+- [ ] Fix logout to await API response: `authService.ts:134-160`
+- [ ] Add input validation/sanitization for all numeric inputs
+- [ ] Configure environment variables in hosting platform
+- [x] Update `.env.example` with all required variables (✅ Completed - Comprehensive .env.example created)
+- [x] Add `.env` to `.gitignore` (✅ Completed - Prevents accidental commit of secrets)
+- [ ] Review and remove test/development Stripe keys from codebase
+- [ ] Set up error monitoring (Sentry, LogRocket, etc.)
+
+### High Priority (Should Do)
+- [ ] Implement basic test coverage (at least auth and cart flows)
+- [ ] Add lazy loading for route components
+- [ ] Extract magic numbers to named constants
+- [ ] Optimize Header component with `React.memo`
+- [ ] Add bundle size analysis to build pipeline
+- [ ] Configure CSP headers in hosting environment
+- [ ] Set up CI/CD pipeline with linting and build checks
+
+### Medium Priority (Nice to Have)
+- [ ] Migrate token storage to httpOnly cookies
+- [ ] Implement refresh token rotation
+- [ ] Add CSRF protection (if using cookies)
+- [ ] Create centralized logging strategy
+- [ ] Add accessibility audit with axe-core
+- [ ] Implement analytics tracking
+- [ ] Add bundle size limits to prevent bloat
+
+### Security Checklist
+- [ ] All API keys are environment variables (not hardcoded)
+- [ ] `.env` files are in `.gitignore`
+- [ ] No sensitive data in localStorage without encryption
+- [ ] All user inputs are validated on both client and server
+- [ ] HTTPS is enforced on production domain
+- [ ] Stripe is in production mode with real keys
+- [ ] Authentication flows are tested thoroughly
 
 ## 🔑 Key Features Explained
 
@@ -263,17 +424,6 @@ All routes are defined in `src/App.jsx`:
 - **Orders**: `/api/orders`, `/api/orders/:id`, `/api/orders/generate-token`
 - **Addresses**: `/api/addresses`, `/api/addresses/create`
 - **Payments**: `/api/payments/checkout`, `/api/payments/order/:orderId`
-
-## 💳 Stripe Testing
-
-For testing Stripe payments in development, use these test card numbers:
-
-- **Success**: 4242 4242 4242 4242
-- **Declined**: 4000 0000 0000 0002
-- **3D Secure Required**: 4000 0025 0000 3155
-- **Insufficient Funds**: 4000 0000 0000 9995
-
-Use any future expiry date, any 3-digit CVC, and any postal code.
 
 ## 🤝 Contributing
 

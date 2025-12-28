@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { logger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -51,7 +52,7 @@ const Orders = () => {
           setTotal(response.data.totalElements || 0);
         }
       } catch (error) {
-        console.error("Failed to fetch orders:", error);
+        logger.error("Failed to fetch orders:", error);
         toast.error("Failed to load orders");
       } finally {
         setLoading(false);
@@ -91,7 +92,7 @@ const Orders = () => {
         activeTab === "all" ? undefined : parseInt(activeTab)
       );
     } catch (error: any) {
-      console.error("Failed to cancel order:", error);
+      logger.error("Failed to cancel order:", error);
       toast.error(error.response?.data?.message || "Failed to cancel order");
     }
   };

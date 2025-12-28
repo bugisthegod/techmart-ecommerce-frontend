@@ -4,6 +4,7 @@ import type { AuthResult, JwtPayload } from "@/types";
 import type { UserRegisterRequest } from "@/api/models/userRegisterRequest";
 import type { UserResponse } from "@/api/models/userResponse";
 import type { LoginResponse } from "@/api/models/loginResponse";
+import { logger } from "@/lib/logger";
 
 /**
  * Authentication Service
@@ -31,7 +32,7 @@ class AuthService {
    */
   async register(userData: UserRegisterRequest): Promise<AuthServiceResult> {
     try {
-      console.log("🔐 Attempting user registration for:", userData.username);
+      logger.log("🔐 Attempting user registration for:", userData.username);
 
       // Send registration request to your Spring Boot backend
       // This corresponds to: POST /api/users/register
@@ -46,14 +47,14 @@ class AuthService {
         throw new Error(`Register failed: ${response.data.msg}`);
       }
 
-      console.log("✅ Registration successful");
+      logger.log("✅ Registration successful");
       return {
         success: true,
         message: "Registration successful! Please log in.",
         data: response.data,
       };
     } catch (error: any) {
-      console.error("❌ Registration failed:", error);
+      logger.error("❌ Registration failed:", error);
 
       // Return a standardized error format that your components can handle consistently
       return {
@@ -70,7 +71,7 @@ class AuthService {
    */
   async login(username: string, password: string): Promise<AuthServiceResult> {
     try {
-      console.log("🔐 Attempting login for user:", username);
+      logger.log("🔐 Attempting login for user:", username);
 
       // Send login request to your Spring Boot backend
       // This corresponds to: POST /api/users/login
@@ -96,7 +97,7 @@ class AuthService {
         // Store user information for easy access throughout the application
         localStorage.setItem("user_data", JSON.stringify(userInfo));
 
-        console.log("✅ Login successful for user:", userInfo.username);
+        logger.log("✅ Login successful for user:", userInfo.username);
 
         return {
           success: true,
@@ -110,7 +111,7 @@ class AuthService {
         throw new Error("Invalid response: missing token or user information");
       }
     } catch (error: any) {
-      console.error("❌ Login failed:", error);
+      logger.error("❌ Login failed:", error);
 
       // Clear any existing authentication data on login failure
       this.clearAuthData();
@@ -132,7 +133,7 @@ class AuthService {
    * the token on the server side for enhanced security.
    */
   logout(): AuthServiceResult {
-    console.log("🔐 Logging out user");
+    logger.log("🔐 Logging out user");
 
     const token = localStorage.getItem("jwt_token");
     const response = api.post("/users/logout", {}, {
@@ -140,7 +141,7 @@ class AuthService {
         Authorization: `Bearer ${token}`,
       }
     });
-    console.log("is successful remove token", response);
+    logger.log("is successful remove token", response);
 
     // Check if the response status is successful
     // if (response.status !== 200) {
@@ -151,7 +152,7 @@ class AuthService {
 
     // You could also make an API call to invalidate the token on the server
     // await api.post('/users/logout');
-    console.log("✅ Logout completed");
+    logger.log("✅ Logout completed");
 
     return {
       success: true,
@@ -169,19 +170,19 @@ class AuthService {
 
     // First check if token and user data exist
     if (!token || !userData) {
-      console.log("🔍 Authentication check: No token or user data found");
+      logger.log("🔍 Authentication check: No token or user data found");
       return false;
     }
 
     // Validate token expiration
     if (this.isTokenExpired(token)) {
-      console.log("🔍 Authentication check: Token has expired");
+      logger.log("🔍 Authentication check: Token has expired");
       // Clear expired token and user data
       this.clearAuthData();
       return false;
     }
 
-    console.log("🔍 Authentication check: Authenticated with valid token");
+    logger.log("🔍 Authentication check: Authenticated with valid token");
     return true;
   }
 
@@ -194,7 +195,7 @@ class AuthService {
 
       if (!decoded.exp) {
         // If token doesn't have expiration, consider it invalid
-        console.warn("⚠️ Token missing expiration claim");
+        logger.warn("⚠️ Token missing expiration claim");
         return true;
       }
 
@@ -204,12 +205,12 @@ class AuthService {
 
       if (isExpired) {
         const expirationDate = new Date(decoded.exp * 1000);
-        console.log(`⏰ Token expired at: ${expirationDate.toLocaleString()}`);
+        logger.log(`⏰ Token expired at: ${expirationDate.toLocaleString()}`);
       }
 
       return isExpired;
     } catch (error) {
-      console.error("❌ Error decoding token:", error);
+      logger.error("❌ Error decoding token:", error);
       // If we can't decode the token, consider it invalid
       return true;
     }
@@ -223,7 +224,7 @@ class AuthService {
       const userData = localStorage.getItem("user_data");
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error("❌ Error parsing user data:", error);
+      logger.error("❌ Error parsing user data:", error);
       // Clear corrupted data
       this.clearAuthData();
       return null;
@@ -242,7 +243,7 @@ class AuthService {
    */
   async updateProfile(updatedUserData: Partial<UserResponse>): Promise<AuthServiceResult> {
     try {
-      console.log("🔐 Updating user profile");
+      logger.log("🔐 Updating user profile");
 
       // This would correspond to a PUT endpoint in your Spring Boot backend
       // You might need to implement this in your UserController
@@ -253,7 +254,7 @@ class AuthService {
       const updatedUser = { ...currentUser, ...response.data };
       localStorage.setItem("user_data", JSON.stringify(updatedUser));
 
-      console.log("✅ Profile updated successfully");
+      logger.log("✅ Profile updated successfully");
 
       return {
         success: true,
@@ -261,7 +262,7 @@ class AuthService {
         data: updatedUser,
       };
     } catch (error: any) {
-      console.error("❌ Profile update failed:", error);
+      logger.error("❌ Profile update failed:", error);
 
       return {
         success: false,

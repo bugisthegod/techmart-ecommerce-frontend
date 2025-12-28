@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { productPagination } from "../services/productService";
+import { logger } from "@/lib/logger";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
@@ -28,13 +29,13 @@ function ProductList() {
         page: page,
         size: pageSize,
       });
-      console.log("productList", result);
+      logger.log("productList", result);
       if (result.success && result.data) {
         setProducts(result.data.content ?? []);
         setTotalPages(Math.ceil(500 / pageSize));
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }

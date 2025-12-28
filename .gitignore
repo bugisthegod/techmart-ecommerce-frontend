@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -26,3 +31,11 @@ dist-ssr
 /src/assets/*.svg
 CART_PLAN.md
 .claude/settings.local.json
+/.claude/*
+/openspec/*
+CLAUDE.md
+AGENTS.md
+.github/prompts/openspec-apply.prompt.md
+.github/prompts/openspec-archive.prompt.md
+.github/prompts/openspec-proposal.prompt.md
+docs/troubleshooting-orval-404.md

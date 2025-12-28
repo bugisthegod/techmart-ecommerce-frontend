@@ -9,6 +9,7 @@ import orderService from "../services/orderService";
 import addressService from "../services/addressService";
 import { getPaymentManagement } from "@/api/payment-management/payment-management";
 import type { CheckoutRequest } from "@/api/models";
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -128,7 +129,7 @@ function Checkout() {
           localStorage.setItem("Idempotency-Token", token);
         }
       } catch (error) {
-        console.error("Initialize checkout error:", error);
+        logger.error("Initialize checkout error:", error);
         setShowAddressForm(true);
       } finally {
         setLoadingAddresses(false);
@@ -241,7 +242,7 @@ function Checkout() {
           // Redirect to Stripe's hosted checkout page
           window.location.href = stripeUrl;
         } catch (error) {
-          console.error("Checkout session error:", error);
+          logger.error("Checkout session error:", error);
           toast.error("Failed to initialize payment. Please try again.");
           setLoading(false);
         }
@@ -252,7 +253,7 @@ function Checkout() {
         navigate(`/order-success/${orderId}`);
       }
     } catch (error) {
-      console.error("Checkout error:", error);
+      logger.error("Checkout error:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
       setLoading(false);

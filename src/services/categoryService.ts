@@ -1,5 +1,6 @@
 import api from './api';
 import type { CategoryResponse } from '@/api/models';
+import { logger } from '@/lib/logger';
 
 interface ServiceResult<T = any> {
   success: boolean;
@@ -27,7 +28,7 @@ export const getCategoryById = async (
       message: "Failed to fetch category",
     };
   } catch (error: any) {
-    console.error("❌ Category fetch failed:", error);
+    logger.error("❌ Category fetch failed:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch category",
@@ -53,7 +54,7 @@ export const getAllCategories = async (): Promise<ServiceResult<CategoryResponse
       message: "Failed to fetch categories",
     };
   } catch (error: any) {
-    console.error("❌ Categories fetch failed:", error);
+    logger.error("❌ Categories fetch failed:", error);
     return {
       success: false,
       message: error.message || "Failed to fetch categories",

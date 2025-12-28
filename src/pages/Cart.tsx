@@ -4,6 +4,7 @@ import { useCart } from "../store/cartContext";
 import { Trash2, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { logger } from "@/lib/logger";
 import {
   Card,
   CardContent,
@@ -77,7 +78,7 @@ function Cart() {
   // Calculate totals based on selected items
   // Ensure we rely on backend/store 'selected' state mostly, but for immediate UI feedback we use local state or store data
   const selectedTotal = items.reduce((total, item) => {
-    console.log("Item:", item, "Selected:", item.selected);
+    logger.log("Item:", item, "Selected:", item.selected);
     return item.selected ? total + (item.productPrice ?? 0) * (item.quantity ?? 0)
       : total;
   }, 0);

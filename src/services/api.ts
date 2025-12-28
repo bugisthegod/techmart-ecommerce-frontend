@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import type { NavigateFunction } from "react-router-dom";
 import { ApiError } from "@/types";
+import { logger } from "@/lib/logger";
 
 /**
  * Base API configuration for the e-commerce application
@@ -43,16 +44,16 @@ api.interceptors.request.use(
       // Add Bearer token to Authorization header
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log("token:",token)
+    logger.log("token:", token);
 
-    // Log the outgoing request for debugging (remove in production)
-    console.log("🚀 API Request:", config.method?.toUpperCase(), config.url);
+    // Log the outgoing request for debugging
+    logger.log("🚀 API Request:", config.method?.toUpperCase(), config.url);
 
     return config;
   },
   (error: AxiosError) => {
     // Handle request configuration errors
-    console.error("❌ Request Error:", error);
+    logger.error("❌ Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -65,14 +66,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     // Log successful responses for debugging
-    console.log("✅ API Response:", response.status, response.config.url);
+    logger.log("✅ API Response:", response.status, response.config.url);
 
     // Return the response data directly (unwrap the axios wrapper)
     return response.data;
   },
   (error: AxiosError) => {
     // Handle different types of errors
-    console.error(
+    logger.error(
       "❌ API Error:",
       error.response?.status,
       error.response?.data
@@ -85,7 +86,7 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - token expired or invalid
-          console.warn("🔒 Authentication failed - redirecting to login");
+          logger.warn("🔒 Authentication failed - redirecting to login");
           localStorage.removeItem("jwt_token");
           // We'll implement proper redirect logic later
           if(navigateFunction) navigateFunction("/login");
@@ -93,21 +94,21 @@ api.interceptors.response.use(
 
         case 403:
           // Forbidden - user doesn't have permission
-          console.warn("🚫 Access forbidden");
+          logger.warn("🚫 Access forbidden");
           break;
 
         case 404:
           // Not found
-          console.warn("🔍 Resource not found");
+          logger.warn("🔍 Resource not found");
           break;
 
         case 500:
           // Server error
-          console.error("🔥 Server error occurred");
+          logger.error("🔥 Server error occurred");
           break;
 
         default:
-          console.error("💥 Unexpected error:", status);
+          logger.error("💥 Unexpected error:", status);
       }
 
       // Return a structured error object
@@ -121,7 +122,7 @@ api.interceptors.response.use(
 
     // Network error or request timeout
     if (error.request) {
-      console.error("🌐 Network error - backend might be down");
+      logger.error("🌐 Network error - backend might be down");
       const apiError: ApiError = {
         status: 0,
         message: "Network error - please check your connection",
@@ -144,6 +145,7 @@ export default api;
 // Mutator function for orval-generated code
 export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
   const source = axios.CancelToken.source();
+  const url = config.url?.replace(/^\/api/, '');
 
   // Strip /api prefix from orval-generated URLs since our baseURL already includes it
   const modifiedConfig = {
