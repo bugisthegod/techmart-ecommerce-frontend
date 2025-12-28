@@ -242,8 +242,8 @@ function Checkout() {
           // Redirect to Stripe's hosted checkout page
           window.location.href = stripeUrl;
         } catch (error) {
-          logger.error("Checkout session error:", error);
-          toast.error("Failed to initialize payment. Please try again.");
+          console.error("Payment error:", error);
+          toast.error("Payment processing failed. Please try again.");
           setLoading(false);
         }
       } else {
