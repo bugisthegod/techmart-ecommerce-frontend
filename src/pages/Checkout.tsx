@@ -242,7 +242,7 @@ function Checkout() {
           // Redirect to Stripe's hosted checkout page
           window.location.href = stripeUrl;
         } catch (error) {
-          console.error("Payment error:", error);
+          logger.error("Payment error:", error);
           toast.error("Payment processing failed. Please try again.");
           setLoading(false);
         }
