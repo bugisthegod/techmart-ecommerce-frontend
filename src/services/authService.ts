@@ -5,6 +5,12 @@ import type { UserRegisterRequest } from "@/api/models/userRegisterRequest";
 import type { UserResponse } from "@/api/models/userResponse";
 import type { LoginResponse } from "@/api/models/loginResponse";
 import { logger } from "@/lib/logger";
+import {
+  loginResponseSchema,
+  sanitizeUserData,
+  isValidJwtFormat,
+  isTokenExpiredWithSkew,
+} from "@/lib/validation";
 
 /**
  * Authentication Service
@@ -43,15 +49,12 @@ class AuthService {
         phone: userData.phone || null,
       });
 
-      if (response.status !== 200) {
-        throw new Error(`Register failed: ${response.data.msg}`);
-      }
-
+      // Note: api interceptor unwraps response.data, so response IS the data
       logger.log("✅ Registration successful");
       return {
         success: true,
         message: "Registration successful! Please log in.",
-        data: response.data,
+        data: response,
       };
     } catch (error: any) {
       logger.error("❌ Registration failed:", error);
@@ -80,31 +83,47 @@ class AuthService {
         password,
       });
 
-      // Check if the response status is successful
-      if (response.status !== 200) {
-        throw new Error(`Login failed: ${response.data.msg}`);
+      // Note: api interceptor unwraps response.data, so response IS the data
+      // Validate response structure with Zod schema first
+      const validationResult = loginResponseSchema.safeParse(response);
+
+      if (!validationResult.success) {
+        logger.error("❌ Invalid login response structure:", validationResult.error);
+        throw new Error("Invalid response from server");
       }
 
-      // Extract the JWT token from the response
-      // Your Spring Boot backend returns this in the LoginResponse DTO
-      const { token, userInfo } = response.data as LoginResponse;
+      const { token, userInfo } = validationResult.data;
 
       if (token && userInfo) {
+        // Validate JWT token format before storing
+        if (!isValidJwtFormat(token)) {
+          logger.error("❌ Invalid JWT token format");
+          throw new Error("Invalid token format");
+        }
+
+        // Sanitize user data before storing
+        const sanitizedUserInfo = sanitizeUserData(userInfo);
+
+        if (!sanitizedUserInfo) {
+          logger.error("❌ Failed to sanitize user data");
+          throw new Error("Invalid user data");
+        }
+
         // Store the JWT token for future API requests
         // The api.js interceptor will automatically include this in future requests
         localStorage.setItem("jwt_token", token);
 
-        // Store user information for easy access throughout the application
-        localStorage.setItem("user_data", JSON.stringify(userInfo));
+        // Store sanitized user information for easy access throughout the application
+        localStorage.setItem("user_data", JSON.stringify(sanitizedUserInfo));
 
-        logger.log("✅ Login successful for user:", userInfo.username);
+        logger.log("✅ Login successful for user:", sanitizedUserInfo.username, "| User ID:", sanitizedUserInfo.userId);
 
         return {
           success: true,
           message: "Login successful!",
           data: {
             token,
-            userInfo,
+            userInfo: sanitizedUserInfo,
           },
         };
       } else {
@@ -128,36 +147,59 @@ class AuthService {
    * User Logout
    * Clears user session and authentication data
    *
-   * This is a client-side logout that clears stored tokens.
-   * In a production application, you might also want to invalidate
-   * the token on the server side for enhanced security.
+   * This is an async logout that invalidates the token on the server side
+   * before clearing local data for enhanced security.
    */
-  logout(): AuthServiceResult {
+  async logout(): Promise<AuthServiceResult> {
     logger.log("🔐 Logging out user");
 
-    const token = localStorage.getItem("jwt_token");
-    const response = api.post("/users/logout", {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    try {
+      const token = this.getToken();
+
+      // If no token exists, user is already logged out
+      if (!token) {
+        this.clearAuthData();
+        logger.log("✅ Already logged out (no token found)");
+        return {
+          success: true,
+          message: "Already logged out",
+        };
       }
-    });
-    logger.log("is successful remove token", response);
 
-    // Check if the response status is successful
-    // if (response.status !== 200) {
-    //   throw new Error(`Login failed: ${response.msg}`);
-    // }
-    // Clear all authentication-related data from localStorage
-    this.clearAuthData();
+      // Attempt to invalidate token on server (blacklist via Redis)
+      // Note: request interceptor automatically adds Authorization header
+      await api.post("/users/logout", {});
 
-    // You could also make an API call to invalidate the token on the server
-    // await api.post('/users/logout');
-    logger.log("✅ Logout completed");
+      logger.log("✅ Server-side logout successful");
 
-    return {
-      success: true,
-      message: "Logged out successfully",
-    };
+      // Clear local data after successful server-side invalidation
+      this.clearAuthData();
+
+      return {
+        success: true,
+        message: "Logged out successfully",
+      };
+
+    } catch (error: any) {
+      // Defensive approach: clear local data even if server call fails
+      this.clearAuthData();
+
+      // Handle 401 gracefully (token already expired/invalid)
+      if (error.status === 401) {
+        logger.log("✅ Logout completed (token was already invalid)");
+        return {
+          success: true,
+          message: "Session already expired",
+        };
+      }
+
+      // Handle network errors or other failures
+      logger.error("⚠️ Server-side logout failed, but local data cleared:", error);
+      return {
+        success: false,
+        message: "Logout completed locally, but server notification failed",
+      };
+    }
   }
 
   /**
@@ -188,9 +230,16 @@ class AuthService {
 
   /**
    * Check if JWT token is expired
+   * Includes format validation and clock skew tolerance
    */
   isTokenExpired(token: string): boolean {
     try {
+      // First validate token format
+      if (!isValidJwtFormat(token)) {
+        logger.warn("⚠️ Invalid JWT token format");
+        return true;
+      }
+
       const decoded = jwtDecode<JwtPayload>(token);
 
       if (!decoded.exp) {
@@ -199,9 +248,8 @@ class AuthService {
         return true;
       }
 
-      // JWT exp is in seconds, Date.now() is in milliseconds
-      const currentTime = Date.now() / 1000;
-      const isExpired = decoded.exp < currentTime;
+      // Use clock skew tolerance (30 seconds)
+      const isExpired = isTokenExpiredWithSkew(decoded.exp, 30);
 
       if (isExpired) {
         const expirationDate = new Date(decoded.exp * 1000);
@@ -249,9 +297,16 @@ class AuthService {
       // You might need to implement this in your UserController
       const response = await api.put("/users/profile", updatedUserData);
 
-      // Update stored user data with new information
+      // Sanitize and validate the updated user data
+      const sanitizedUpdate = sanitizeUserData(response.data);
+
+      if (!sanitizedUpdate) {
+        throw new Error("Invalid user data received from server");
+      }
+
+      // Update stored user data with new sanitized information
       const currentUser = this.getCurrentUser();
-      const updatedUser = { ...currentUser, ...response.data };
+      const updatedUser = { ...currentUser, ...sanitizedUpdate };
       localStorage.setItem("user_data", JSON.stringify(updatedUser));
 
       logger.log("✅ Profile updated successfully");

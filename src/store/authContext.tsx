@@ -153,8 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await authService.login(username, password);
 
-      logger.log("after login success",result);
-      
+      logger.log("After login success:", result);
+
       if (result.success) {
         dispatch({
           type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -217,9 +217,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Logout function that components can call
    */
-  const logout = () => {
-    authService.logout();
-    dispatch({ type: AUTH_ACTIONS.LOGOUT });
+  const logout = async () => {
+    try {
+      await authService.logout();
+      dispatch({ type: AUTH_ACTIONS.LOGOUT });
+    } catch (error) {
+      // Even if logout fails, still clear local auth state
+      logger.error("Logout error in context:", error);
+      dispatch({ type: AUTH_ACTIONS.LOGOUT });
+    }
   };
 
   /**

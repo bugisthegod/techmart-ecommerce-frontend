@@ -44,10 +44,9 @@ api.interceptors.request.use(
       // Add Bearer token to Authorization header
       config.headers.Authorization = `Bearer ${token}`;
     }
-    logger.log("token:", token);
 
-    // Log the outgoing request for debugging
-    logger.log("🚀 API Request:", config.method?.toUpperCase(), config.url);
+    // Log the outgoing request for debugging (token presence only, not value)
+    logger.log("🚀 API Request:", config.method?.toUpperCase(), config.url, "| Auth:", !!token);
 
     return config;
   },
@@ -114,7 +113,9 @@ api.interceptors.response.use(
       // Return a structured error object
       const apiError: ApiError = {
         status,
-        message: (data as any)?.message || "An error occurred",
+        message: (typeof data === 'object' && data !== null && 'message' in data && typeof data.message === 'string')
+          ? data.message
+          : "An error occurred",
         data: data,
       };
       return Promise.reject(apiError);
@@ -143,9 +144,8 @@ api.interceptors.response.use(
 export default api;
 
 // Mutator function for orval-generated code
-export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> => {
+export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> & { cancel?: () => void } => {
   const source = axios.CancelToken.source();
-  const url = config.url?.replace(/^\/api/, '');
 
   // Strip /api prefix from orval-generated URLs since our baseURL already includes it
   const modifiedConfig = {
@@ -154,8 +154,7 @@ export const customAxiosInstance = <T>(config: AxiosRequestConfig): Promise<T> =
     cancelToken: source.token
   };
 
-  const promise = api.request<any, T>(modifiedConfig);
-  // @ts-ignore
+  const promise = api.request<any, T>(modifiedConfig) as Promise<T> & { cancel?: () => void };
   promise.cancel = () => {
     source.cancel('Query was cancelled');
   };
