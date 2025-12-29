@@ -92,7 +92,7 @@ class AuthService {
         throw new Error("Invalid response from server");
       }
 
-      const { token, userInfo } = validationResult.data;
+      const { token, userInfo } = validationResult.data.data;
 
       if (token && userInfo) {
         // Validate JWT token format before storing
@@ -116,7 +116,7 @@ class AuthService {
         // Store sanitized user information for easy access throughout the application
         localStorage.setItem("user_data", JSON.stringify(sanitizedUserInfo));
 
-        logger.log("✅ Login successful for user:", sanitizedUserInfo.username, "| User ID:", sanitizedUserInfo.userId);
+        logger.log("✅ Login successful for user:", sanitizedUserInfo.username, "| User ID:", sanitizedUserInfo.id);
 
         return {
           success: true,

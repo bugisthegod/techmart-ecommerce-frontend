@@ -20,24 +20,34 @@ import { logger } from "@/lib/logger";
  * Validates the structure of user data from the backend
  */
 export const userResponseSchema = z.object({
-  userId: z.number().positive(),
+  id: z.number().positive(),
   username: z.string().min(1).max(50),
   email: z.string().email().max(100),
   phone: z.string().max(20).nullable().optional(),
+  avatar: z.string().nullable().optional(),
+  status: z.number().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 
 /**
- * Login Response Schema
- * Validates the login API response structure
+ * Login Data Schema
+ * Validates the actual login data structure
  */
-export const loginResponseSchema = z.object({
+const loginDataSchema = z.object({
   token: z.string().min(1),
   userInfo: userResponseSchema,
   expiresIn: z.number().positive().optional(),
+});
+
+/**
+ * Login Response Schema
+ * Validates the login API response structure wrapped in ResponseResult
+ */
+export const loginResponseSchema = z.object({
   status: z.number().optional(),
   msg: z.string().optional(),
+  data: loginDataSchema,
 });
 
 /**
@@ -101,10 +111,12 @@ export function sanitizeUserData(userData: any): any {
   }
 
   return {
-    userId: typeof userData.userId === 'number' ? userData.userId : 0,
+    id: typeof userData.id === 'number' ? userData.id : 0,
     username: sanitizeUsername(String(userData.username || '')),
     email: sanitizeEmail(String(userData.email || '')),
     phone: userData.phone ? sanitizePhone(String(userData.phone)) : null,
+    avatar: userData.avatar || undefined,
+    status: userData.status || undefined,
     createdAt: userData.createdAt || undefined,
     updatedAt: userData.updatedAt || undefined,
   };

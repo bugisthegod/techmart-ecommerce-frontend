@@ -349,14 +349,6 @@ Before deploying to production, ensure you complete the following:
 - [ ] Configure CSP headers in hosting environment
 - [ ] Set up CI/CD pipeline with linting and build checks
 
-### Medium Priority (Nice to Have)
-- [ ] Migrate token storage to httpOnly cookies
-- [ ] Implement refresh token rotation
-- [ ] Add CSRF protection (if using cookies)
-- [ ] Create centralized logging strategy
-- [ ] Add accessibility audit with axe-core
-- [ ] Implement analytics tracking
-- [ ] Add bundle size limits to prevent bloat
 
 ### Security Checklist
 - [x] All API keys are environment variables (not hardcoded) ✅
