@@ -52,8 +52,11 @@ const addressSchema = z.object({
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
+  district: z.string().min(1, "District is required"),
   postalCode: z.string().min(1, "Postal Code is required"),
-  phone: z.string().min(1, "Phone is required"),
+  phone: z.string()
+    .min(1, "Phone is required")
+    .regex(/^(\+353|0)[1-9]\d{7,9}$/, "Please enter a valid Irish phone number"),
   // Keep required to align RHF generic type with resolver output.
   isDefault: z.boolean(),
 });
@@ -80,6 +83,7 @@ function Checkout() {
       address: "",
       city: "",
       state: "",
+      district: "",
       postalCode: "",
       phone: "",
       isDefault: false,
@@ -151,7 +155,7 @@ function Checkout() {
         // map what we have from this simple form
         province: values.state,
         city: values.city,
-        district: "",
+        district: values.district,
         detailAddress: values.address,
         postalCode: values.postalCode,
         isDefault: values.isDefault ? 1 : savedAddresses.length === 0 ? 1 : 0,
@@ -163,7 +167,7 @@ function Checkout() {
       if (addressResult.success || newAddress) {
         toast.success("Address saved successfully!");
         setSavedAddresses([...savedAddresses, newAddress]);
-        setSelectedAddressId(newAddress.id);
+        setSelectedAddressId(String(newAddress.id));
         setShowAddressForm(false);
         form.reset();
       } else {
@@ -415,6 +419,19 @@ function Checkout() {
                               )}
                             />
                           </div>
+                          <FormField
+                            control={form.control}
+                            name="district"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>District</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Manhattan" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                           <div className="grid grid-cols-2 gap-4">
                             <FormField
                               control={form.control}
@@ -437,7 +454,7 @@ function Checkout() {
                                   <FormLabel>Phone</FormLabel>
                                   <FormControl>
                                     <Input
-                                      placeholder="+1 234 567 8900"
+                                      placeholder="+353 89 123 4567"
                                       {...field}
                                     />
                                   </FormControl>
