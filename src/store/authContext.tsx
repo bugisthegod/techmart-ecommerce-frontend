@@ -24,6 +24,7 @@ const AUTH_ACTIONS = {
   REGISTER_SUCCESS: 'REGISTER_SUCCESS',
   REGISTER_FAILURE: 'REGISTER_FAILURE',
   RESTORE_SESSION: 'RESTORE_SESSION',
+  INIT_COMPLETE: 'INIT_COMPLETE',
   CLEAR_ERROR: 'CLEAR_ERROR'
 } as const;
 
@@ -33,6 +34,7 @@ const initialState: AuthState = {
   token: null,                   // JWT token
   isAuthenticated: false,        // Whether user is logged in
   isLoading: false,             // Whether an auth operation is in progress
+  isInitialized: false,         // Whether initial auth check is complete
   error: null                   // Any authentication error messages
 };
 
@@ -99,6 +101,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: true
       };
 
+    case AUTH_ACTIONS.INIT_COMPLETE:
+      return {
+        ...state,
+        isInitialized: true
+      };
+
     case AUTH_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
@@ -131,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authService.isAuthenticated()) {
         const user = authService.getCurrentUser();
         const token = authService.getToken();
-        
+
         if (user && token) {
           dispatch({
             type: AUTH_ACTIONS.RESTORE_SESSION,
@@ -139,6 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       }
+
+      // Mark initialization as complete
+      dispatch({ type: AUTH_ACTIONS.INIT_COMPLETE });
     };
 
     restoreSession();
@@ -242,6 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     token: state.token,
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
+    isInitialized: state.isInitialized,
     error: state.error,
 
     // Functions that components can call

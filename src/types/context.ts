@@ -9,6 +9,7 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 }
 
@@ -24,6 +25,7 @@ export type AuthAction =
   | { type: 'REGISTER_FAILURE'; payload: { message: string } }
   | { type: 'LOGOUT' }
   | { type: 'RESTORE_SESSION'; payload: { user: UserResponse; token: string } }
+  | { type: 'INIT_COMPLETE' }
   | { type: 'CLEAR_ERROR' };
 
 /**

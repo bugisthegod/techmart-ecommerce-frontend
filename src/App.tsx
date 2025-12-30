@@ -1,11 +1,12 @@
 // src/App.jsx
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { AuthProvider } from "./store/authContext";
+import { AuthProvider, useAuth } from "./store/authContext";
 import { setNavigate } from "./services/api";
 import "./App.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { Loader2 } from "lucide-react";
 
 // Import pages (we'll create these next)
 // import Home from './pages/Home';
@@ -30,9 +31,20 @@ import { StripeProvider } from "./components/payment/StripeProvider";
 function AppContent() {
   // Store a component to api.js
   const navigate = useNavigate();
+  const { isInitialized } = useAuth();
+
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate]);
+
+  // Show loading until auth initialization is complete
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="App">

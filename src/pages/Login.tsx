@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/authContext";
 import { useForm } from "react-hook-form";
@@ -50,8 +50,15 @@ const registerSchema = z
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, register, isLoading } = useAuth(); // Removed error, logout from destructure if not used immediately in render or handle them
+  const { login, register, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/products", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // Login Form Hook
   const loginForm = useForm({
