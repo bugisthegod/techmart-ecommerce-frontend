@@ -18,7 +18,7 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
-// import UserCenter from './pages/UserCenter';
+import Profile from "./pages/Profile";
 
 // Import components (we'll create these next)
 import Header from "./components/common/Header";
@@ -49,7 +49,7 @@ function AppContent() {
           <Route path="/order-details/:orderId" element={<OrderDetails />} />
           <Route path="/order-success/:orderId" element={<OrderSuccess />} />
           <Route path="/order-success/" element={<OrderSuccess />} />
-          {/* <Route path="/user" element={<UserCenter />} /> */}
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
       <Toaster />
