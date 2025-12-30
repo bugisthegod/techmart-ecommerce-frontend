@@ -79,7 +79,7 @@ const Orders = () => {
 
   // View order details
   const viewOrderDetail = (orderId: number) => {
-    navigate(`/order-success/${orderId}`);
+    navigate(`/order-details/${orderId}`);
   };
 
   // Cancel order

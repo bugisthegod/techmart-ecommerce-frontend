@@ -17,6 +17,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
 // import UserCenter from './pages/UserCenter';
 
 // Import components (we'll create these next)
@@ -45,7 +46,9 @@ function AppContent() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<StripeProvider><Checkout /></StripeProvider>} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/order-details/:orderId" element={<OrderDetails />} />
           <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+          <Route path="/order-success/" element={<OrderSuccess />} />
           {/* <Route path="/user" element={<UserCenter />} /> */}
         </Routes>
       </main>

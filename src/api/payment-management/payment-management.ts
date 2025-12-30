@@ -51,6 +51,18 @@ const createCheckoutSession = (
       );
     }
   /**
+ * Retrieve payment and order information using Stripe session ID
+ * @summary Get payment by session ID
+ */
+const getPaymentBySessionId = (
+    sessionId: string,
+ ) => {
+      return customAxiosInstance<ResponseResultPaymentResponse>(
+      {url: `/api/payments/session/${sessionId}`, method: 'GET'
+    },
+      );
+    }
+  /**
  * Retrieve payment information for an order
  * @summary Get payment by order ID
  */
@@ -64,7 +76,8 @@ const getPaymentByOrderId = (
     },
       );
     }
-  return {processRefund,createCheckoutSession,getPaymentByOrderId}};
+  return {processRefund,createCheckoutSession,getPaymentBySessionId,getPaymentByOrderId}};
 export type ProcessRefundResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['processRefund']>>>
 export type CreateCheckoutSessionResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['createCheckoutSession']>>>
+export type GetPaymentBySessionIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['getPaymentBySessionId']>>>
 export type GetPaymentByOrderIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaymentManagement>['getPaymentByOrderId']>>>
