@@ -72,8 +72,24 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       };
 
     case CART_ACTIONS.UPDATE_ITEM_SELECTION:
+      // Update the specific item's selection status
+      const updatedItems = state.items.map(item =>
+        item.id === action.payload.itemId
+          ? { ...item, selected: action.payload.selected }
+          : item
+      );
+
+      // Recalculate selected totals
+      const selectedAmount = updatedItems.reduce((sum, item) =>
+        item.selected === 1 ? sum + ((item.productPrice ?? 0) * (item.quantity ?? 0)) : sum, 0
+      );
+      const selectedCount = updatedItems.filter(item => item.selected === 1).length;
+
       return {
         ...state,
+        items: updatedItems,
+        selectedAmount,
+        selectedCount,
         isLoading: false,
         error: null,
       };
@@ -228,16 +244,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selected: number
   ) => {
     try {
+      // Optimistically update local state
+      dispatch({
+        type: CART_ACTIONS.UPDATE_ITEM_SELECTION,
+        payload: { itemId: cartItemId, selected }
+      });
+
       const result = await cartService.updateItemSelection(cartItemId, selected);
       logger.log("updateItemSelection result", result);
+
       if (result.success) {
-        dispatch({
-          type: CART_ACTIONS.UPDATE_ITEM_SELECTION,
-          payload: { message: result.message ?? "Updated item selection" }
-        });
         return { success: true, message: result.message };
       }
 
+      // If API call failed, reload cart to revert optimistic update
+      await loadCart();
       return {
         success: false,
         message: result.message ?? "Update item selection failed. Please try again.",
@@ -245,6 +266,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       };
     } catch {
       const errorMessage = "Update item selection failed. Please try again.";
+
+      // Reload cart to revert optimistic update
+      await loadCart();
 
       dispatch({
         type: CART_ACTIONS.UPDATE_ITEM_SELECTION_FAILURE,

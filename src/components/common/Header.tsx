@@ -52,7 +52,7 @@ function Header() {
             <div className="flex items-center gap-2">
               {/* Replaced Profile link/logout with a cleaner dropdown or just actions */}
               <b>Welcome! {user?.username}</b>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/user')} className="hidden sm:flex">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
                 Profile
               </Button>
               <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">

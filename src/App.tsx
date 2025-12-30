@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 
 // Import components (we'll create these next)
 import Header from "./components/common/Header";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 // import Footer from "./components/common/Footer";
 import { CartProvider } from "./store/cartContext";
 import { StripeProvider } from "./components/payment/StripeProvider";
@@ -38,18 +39,21 @@ function AppContent() {
       <Header />
       <main className="main-content">
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           {/* <Route path="/register" element={<Register />} /> */}
           <Route path="/products" element={<ProductList />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<StripeProvider><Checkout /></StripeProvider>} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/order-details/:orderId" element={<OrderDetails />} />
-          <Route path="/order-success/:orderId" element={<OrderSuccess />} />
-          <Route path="/order-success/" element={<OrderSuccess />} />
-          <Route path="/profile" element={<Profile />} />
+
+          {/* Protected Routes */}
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><StripeProvider><Checkout /></StripeProvider></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/order-details/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+          <Route path="/order-success/:orderId" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+          <Route path="/order-success/" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </main>
       <Toaster />

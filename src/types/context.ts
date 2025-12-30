@@ -64,7 +64,7 @@ export type CartAction =
   | { type: "ADD_ITEM"; payload: CartResponse }
   | { type: "REMOVE_ITEM"; payload: CartResponse }
   | { type: "UPDATE_QUANTITY"; payload: CartResponse }
-  | { type: "UPDATE_ITEM_SELECTION"; payload: { message: string } }
+  | { type: "UPDATE_ITEM_SELECTION"; payload: { itemId: number; selected: number } }
   | { type: "CLEAR_CART"; payload: { message: string } }
   | { type: "LOAD_CART"; payload: CartResponse }
   | { type: "ADD_ITEM_FAILURE"; payload: { message: string } }
