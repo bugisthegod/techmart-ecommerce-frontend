@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/authContext";
 import { Loader2 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,12 +21,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
       if (!isLoading && !isAuthenticated && !token) {
         logger.warn("🔒 Authentication check: No token or user data found - redirecting to login");
+        toast.error("Please login to continue");
         navigate("/login", { replace: true });
       } else if (!isLoading && !isAuthenticated && token) {
         // Token exists but user is not authenticated (session restoration failed)
         logger.warn("🔒 Authentication check: Invalid or expired token - redirecting to login");
         localStorage.removeItem("jwt_token");
         localStorage.removeItem("user");
+        toast.error("Your session has expired. Please login again.");
         navigate("/login", { replace: true });
       }
 

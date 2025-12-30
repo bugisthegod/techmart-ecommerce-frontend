@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } fro
 import type { NavigateFunction } from "react-router-dom";
 import { ApiError } from "@/types";
 import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 /**
  * Base API configuration for the e-commerce application
@@ -87,7 +88,8 @@ api.interceptors.response.use(
           // Unauthorized - token expired or invalid
           logger.warn("🔒 Authentication failed - redirecting to login");
           localStorage.removeItem("jwt_token");
-          // We'll implement proper redirect logic later
+          localStorage.removeItem("user");
+          toast.error("Session expired. Please login again.");
           if(navigateFunction) navigateFunction("/login");
           break;
 

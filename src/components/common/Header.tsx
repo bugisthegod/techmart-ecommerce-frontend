@@ -18,7 +18,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-white/80 backdrop-blur-md dark:bg-black/80 dark:border-white/10">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between max-w-7xl">
-        <Link to="/" className="text-2xl font-bold tracking-tighter hover:opacity-80 transition-opacity">
+        <Link to={isAuthenticated ? "/products" : "/login"} className="text-2xl font-bold tracking-tighter hover:opacity-80 transition-opacity">
           TechMart
         </Link>
 

@@ -112,7 +112,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-gray-50 dark:bg-zinc-900">
+    <div className="min--full w-full flex bg-gray-50 dark:bg-zinc-900">
       {/* Left side - Image */}
       <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-white">
         <div className="max-w-xl text-center">
@@ -126,9 +126,6 @@ function Login() {
               className="w-full h-auto object-cover max-h-[500px]"
             />
           </div>
-          <p className="text-zinc-400 mt-6 text-lg">
-            Experience the future of shopping with our premium collection.
-          </p>
         </div>
       </div>
 
