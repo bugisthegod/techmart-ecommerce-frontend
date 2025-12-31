@@ -16,7 +16,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import orderService from "../services/orderService";
-import type { OrderResponse } from "@/api/models";
+import { getPaymentManagement } from "@/api/payment-management/payment-management";
+import type { OrderResponse, CheckoutRequest } from "@/api/models";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Orders = () => {
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
+  const [payingOrderId, setPayingOrderId] = useState<number | null>(null);
 
   // Order status mapping
   const ORDER_STATUS: Record<number, { text: string; color: string }> = {
@@ -97,10 +99,37 @@ const Orders = () => {
     }
   };
 
-  // Pay order - Navigate to checkout/payment page
-  const handlePayOrder = (orderId: number) => {
-    // Navigate to checkout page with the order ID
-    navigate(`/checkout?orderId=${orderId}`);
+  // Pay order - Create Stripe checkout session
+  const handlePayOrder = async (orderId: number, userId?: number) => {
+    if (userId === undefined) {
+      toast.error("User ID is required for payment");
+      return;
+    }
+    setPayingOrderId(orderId);
+    try {
+      const { createCheckoutSession } = getPaymentManagement();
+      const checkoutRequest: CheckoutRequest = { orderId };
+
+      const checkoutResponse = await createCheckoutSession(
+        checkoutRequest,
+        { userId }
+      );
+
+      const stripeUrl = checkoutResponse.data?.checkoutUrl;
+
+      if (!stripeUrl) {
+        toast.error("Failed to create payment session");
+        setPayingOrderId(null);
+        return;
+      }
+
+      toast.success("Redirecting to payment...");
+      window.location.href = stripeUrl;
+    } catch (error) {
+      logger.error("Payment error:", error);
+      toast.error("Payment processing failed. Please try again.");
+      setPayingOrderId(null);
+    }
   };
 
   const totalPages = Math.ceil(total / pageSize);
@@ -183,14 +212,19 @@ const Orders = () => {
                             <>
                               <Button
                                 size="sm"
-                                onClick={() => handlePayOrder(order.id ?? 0)}
+                                onClick={() => handlePayOrder(order.id ?? 0, order.userId)}
+                                disabled={payingOrderId === order.id}
                               >
+                                {payingOrderId === order.id && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
                                 Pay Now
                               </Button>
                               <Button
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleCancelOrder(order.id ?? 0)}
+                                disabled={payingOrderId === order.id}
                               >
                                 Cancel
                               </Button>

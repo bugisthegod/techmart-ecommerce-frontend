@@ -48,12 +48,14 @@ import type { AddressResponse } from "@/api/models";
 
 // Address Schema
 const addressSchema = z.object({
-  fullName: z.string().min(1, "Full Name is required"),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  district: z.string().min(1, "District is required"),
-  postalCode: z.string().min(1, "Postal Code is required"),
+  fullName: z.string().min(1, "Full Name is required").max(50, "Full Name must be at most 50 characters"),
+  address: z.string().min(1, "Address is required").max(255, "Address must be at most 255 characters"),
+  city: z.string().min(1, "City is required").max(50, "City must be at most 50 characters"),
+  state: z.string().min(1, "State is required").max(50, "State must be at most 50 characters"),
+  district: z.string().min(1, "District is required").max(50, "District must be at most 50 characters"),
+  postalCode: z.string()
+    .min(1, "Postal Code is required")
+    .regex(/^[A-Za-z0-9]{3}\s?[A-Za-z0-9]{4}$/, "Please enter a valid Irish Eircode (e.g., D02 X285)"),
   phone: z.string()
     .min(1, "Phone is required")
     .regex(/^(\+353|0)[1-9]\d{7,9}$/, "Please enter a valid Irish phone number"),
@@ -385,7 +387,7 @@ function Checkout() {
                               <FormItem>
                                 <FormLabel>Address</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="123 Main St" {...field} />
+                                  <Input placeholder="15 O'Connell Street" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -399,7 +401,7 @@ function Checkout() {
                                 <FormItem>
                                   <FormLabel>City</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="New York" {...field} />
+                                    <Input placeholder="Dublin" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -412,7 +414,7 @@ function Checkout() {
                                 <FormItem>
                                   <FormLabel>State</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="NY" {...field} />
+                                    <Input placeholder="County Dublin" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -426,7 +428,7 @@ function Checkout() {
                               <FormItem>
                                 <FormLabel>District</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Manhattan" {...field} />
+                                  <Input placeholder="Ballsbridge" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -440,7 +442,7 @@ function Checkout() {
                                 <FormItem>
                                   <FormLabel>Postal Code</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="10001" {...field} />
+                                    <Input placeholder="D02 X285" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>

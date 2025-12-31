@@ -16,6 +16,7 @@ import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import CheckoutCancel from "./pages/CheckoutCancel";
 import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
@@ -61,6 +62,7 @@ function AppContent() {
           {/* Protected Routes */}
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><StripeProvider><Checkout /></StripeProvider></ProtectedRoute>} />
+          <Route path="/checkout/cancel" element={<ProtectedRoute><CheckoutCancel /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/order-details/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
           <Route path="/order-success/:orderId" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />

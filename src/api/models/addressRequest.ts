@@ -14,7 +14,7 @@ export interface AddressRequest {
    * @maxLength 50
    */
   receiverName: string;
-  /** @pattern ^1[3-9]\d{9}$ */
+  /** @pattern ^(\+353|0)[1-9]\d{7,9}$ */
   receiverPhone: string;
   /**
    * @minLength 0

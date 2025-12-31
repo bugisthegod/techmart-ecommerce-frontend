@@ -4,7 +4,6 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type { PaymentResponseStatus } from './paymentResponseStatus';
 
 export interface PaymentResponse {
   id?: number;
@@ -13,7 +12,7 @@ export interface PaymentResponse {
   stripePaymentIntentId?: string;
   amount?: number;
   currency?: string;
-  status?: PaymentResponseStatus;
+  status?: number;
   createdAt?: string;
   updatedAt?: string;
 }
