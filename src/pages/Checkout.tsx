@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CreditCard, MapPin, Plus, Truck, Loader2 } from "lucide-react";
+import { CreditCard, MapPin, Plus, Loader2 } from "lucide-react";
 import { useCart } from "../store/cartContext";
 import orderService from "../services/orderService";
 import addressService from "../services/addressService";
@@ -70,7 +70,7 @@ function Checkout() {
   const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState("credit_card");
+  const [paymentMethod] = useState("credit_card");
   const [orderToken, setOrderToken] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<AddressResponse[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -505,61 +505,19 @@ function Checkout() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RadioGroup
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
-              >
-                <div>
-                  <RadioGroupItem
-                    value="credit_card"
-                    id="credit_card"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="credit_card"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                  >
-                    <CreditCard className="mb-3 h-6 w-6" />
-                    Credit Card
-                  </Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <div className="flex flex-col items-center justify-between rounded-md border-2 border-primary bg-popover p-4 text-accent-foreground">
+                    <CreditCard className="mb-3 h-6 w-6 text-primary" />
+                    <span className="font-medium">Credit Card</span>
+                    <div className="absolute top-2 right-2">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <RadioGroupItem
-                    value="paypal"
-                    id="paypal"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="paypal"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                  >
-                    <span className="mb-3 text-xl font-bold">P</span>
-                    PayPal
-                  </Label>
-                </div>
-                <div>
-                  <RadioGroupItem
-                    value="cash_on_delivery"
-                    id="cod"
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor="cod"
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                  >
-                    <Truck className="mb-3 h-6 w-6" />
-                    Cash on Delivery
-                  </Label>
-                </div>
-              </RadioGroup>
-
-              <p className="text-sm text-muted-foreground mt-4 text-center">
-                {paymentMethod === "credit_card"
-                  ? "You'll be redirected to Stripe's secure checkout page to complete your payment."
-                  : paymentMethod === "paypal"
-                  ? "You'll be redirected to PayPal to complete your payment."
-                  : "Pay with cash when your order is delivered."}
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                You will be redirected to Stripe to complete your payment securely.
               </p>
             </CardContent>
           </Card>

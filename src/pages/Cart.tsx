@@ -47,6 +47,17 @@ function Cart() {
     await updateQuantity(cartItemId, newQuantity);
   };
 
+  const handleInputChange = async (
+    cartItemId: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = parseInt(e.target.value);
+    if (isNaN(value) || value < 1) {
+      return;
+    }
+    await updateQuantity(cartItemId, value);
+  };
+
   const handleRemoveItem = async (productId: number) => {
     await removeItem(productId);
   };
@@ -159,30 +170,36 @@ function Cart() {
 
                     <div className="flex items-center justify-between mt-4">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) - 1)
-                          }
-                          disabled={(item.quantity ?? 1) <= 1}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <div className="w-12 text-center text-sm font-medium">
-                          {item.quantity ?? 0}
+                        <div className="flex items-center">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-r-none border-r-0"
+                            onClick={() =>
+                              handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) - 1)
+                            }
+                            disabled={(item.quantity ?? 1) <= 1}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <input
+                            type="number"
+                            value={item.quantity ?? 0}
+                            onChange={(e) => handleInputChange(item.id ?? 0, e)}
+                            className="h-8 w-12 border-y bg-background text-sm font-medium text-center focus-visible:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min="1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-l-none border-l-0"
+                            onClick={() =>
+                              handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) + 1)
+                            }
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            handleQuantityChange(item.id ?? 0, (item.quantity ?? 1) + 1)
-                          }
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
                       </div>
 
                       <Button

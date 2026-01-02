@@ -115,8 +115,8 @@ api.interceptors.response.use(
       // Return a structured error object
       const apiError: ApiError = {
         status,
-        message: (typeof data === 'object' && data !== null && 'message' in data && typeof data.message === 'string')
-          ? data.message
+        message: (typeof data === 'object' && data !== null && 'msg' in data && typeof data.msg === 'string')
+          ? data.msg
           : "An error occurred",
         data: data,
       };

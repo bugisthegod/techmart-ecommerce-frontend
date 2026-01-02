@@ -100,6 +100,25 @@ function ProductDetail() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!product) return;
+    const value = parseInt(e.target.value);
+    if (isNaN(value)) {
+      setQuantity(1);
+      return;
+    }
+    
+    const stock = product.stock ?? 0;
+    if (value > stock) {
+      setQuantity(stock);
+      toast.warning(`Only ${stock} items available in stock`);
+    } else if (value < 1) {
+      setQuantity(1);
+    } else {
+      setQuantity(value);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -245,9 +264,14 @@ function ProductDetail() {
                 <Button variant="outline" size="icon" className="h-8 w-8 rounded-r-none border-r-0" onClick={() => handleQuantityChange('dec')} disabled={quantity <= 1}>
                   <Minus className="h-3 w-3" />
                 </Button>
-                <div className="h-8 min-w-[3rem] px-2 flex items-center justify-center border-y bg-background text-sm font-medium">
-                  {quantity}
-                </div>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={handleInputChange}
+                  className="h-8 w-12 border-y bg-background text-sm font-medium text-center focus-visible:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  min="1"
+                  max={product.stock ?? 0}
+                />
                 <Button variant="outline" size="icon" className="h-8 w-8 rounded-l-none border-l-0" onClick={() => handleQuantityChange('inc')} disabled={quantity >= (product.stock ?? 0)}>
                   <Plus className="h-3 w-3" />
                 </Button>

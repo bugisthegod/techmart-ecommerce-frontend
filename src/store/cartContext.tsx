@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import cartService from "../services/cartService";
-import authService from "../services/authService";
 import type { CartState, CartAction, CartContextValue } from "@/types";
 import type { CartItemRequest } from "@/api/models";
 import { logger } from "@/lib/logger";
+import { useAuth } from "./authContext";
+import { toast } from "sonner";
 
 // Define all possible cart actions
 const CART_ACTIONS = {
@@ -140,12 +141,20 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { isAuthenticated } = useAuth();
 
+  // Sync cart with authentication state
   useEffect(() => {
-    if (authService.isAuthenticated()) {
+    if (isAuthenticated) {
       loadCart();
+    } else {
+      // Clear local cart state on logout
+      dispatch({
+        type: CART_ACTIONS.CLEAR_CART,
+        payload: { message: "Logged out" }
+      });
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const addItem: CartContextValue["addItem"] = async (req: CartItemRequest) => {
     try {
@@ -159,21 +168,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return { success: true, message: result.message };
       }
 
-      // Ensure a return value even when the service responds without data.
+      const errorMessage = result.message ?? "Add item failed. Please try again.";
+      toast.error(errorMessage);
       return {
         success: false,
-        message: result.message ?? "Add item failed. Please try again.",
+        message: errorMessage,
         errors: result.errors,
       };
     } catch {
       const errorMessage = "Add item failed. Please try again.";
+      toast.error(errorMessage);
 
       dispatch({
         type: CART_ACTIONS.ADD_ITEM_FAILURE,
         payload: { message: errorMessage },
       });
 
-  return { success: false, message: errorMessage };
+      return { success: false, message: errorMessage };
     }
   };
 
@@ -189,13 +200,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return { success: true, message: result.message };
       }
 
+      const errorMessage = result.message ?? "Remove item failed. Please try again.";
+      toast.error(errorMessage);
       return {
         success: false,
-        message: result.message ?? "Remove item failed. Please try again.",
+        message: errorMessage,
         errors: result.errors,
       };
     } catch {
       const errorMessage = "remove item failed. Please try again.";
+      toast.error(errorMessage);
 
       dispatch({
         type: CART_ACTIONS.REMOVE_ITEM_FAILURE,
@@ -221,13 +235,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return { success: true, message: result.message };
       }
 
+      const errorMessage = result.message ?? "Update quantity failed. Please try again.";
+      toast.error(errorMessage);
       return {
         success: false,
-        message: result.message ?? "Update quantity failed. Please try again.",
+        message: errorMessage,
         errors: result.errors,
       };
     } catch {
       const errorMessage = "Update quantity failed. Please try again.";
+      toast.error(errorMessage);
 
       dispatch({
         type: CART_ACTIONS.UPDATE_QUANTITY_FAILURE,

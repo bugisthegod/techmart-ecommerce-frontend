@@ -3,6 +3,17 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, LogOut } from "lucide-react";
 import { useAuth } from "../../store/authContext";
 import { useCart } from "../../store/cartContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -10,8 +21,8 @@ function Header() {
 
   const { totalItems } = useCart();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
@@ -55,9 +66,28 @@ function Header() {
               <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
                 Profile
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
-                <LogOut className="h-5 w-5" />
-              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" title="Logout">
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You will need to login again to access your cart and orders.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ) : 
           (
