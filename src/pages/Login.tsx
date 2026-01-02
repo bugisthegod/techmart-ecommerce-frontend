@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import type { UserLoginRequest, UserRegisterRequest } from "@/api/models";
+import type { UserLoginRequest } from "@/api/models";
 
 // Login Schema
 const loginSchema = z.object({
@@ -31,26 +31,25 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-// Register Schema
+// Registration Schema (currently not used for submission)
 const registerSchema = z
   .object({
     username: z.string().min(1, "Username is required"),
     email: z.string().email("Invalid email address"),
     phone: z.string().optional(),
-    password: z
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z
       .string()
-      .min(6, "Password must be at least 6 characters")
-      .max(20, "Password cannot exceed 20 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+      .min(6, "Confirm Password must be at least 6 characters"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Passwords don't match",
     path: ["confirmPassword"],
   });
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, register, isLoading, isAuthenticated } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -97,29 +96,14 @@ function Login() {
     }
   };
 
-  const onRegisterFinish = async (values: UserRegisterRequest) => {
-    try {
-      const result = await register({
-        username: values.username,
-        email: values.email,
-        phone: values.phone,
-        password: values.password,
-      });
-
-      if (result.success) {
-        toast.success("Registration successful! Please log in.");
-        setIsLogin(true);
-        registerForm.reset();
-      } else {
-        toast.error(result.message || "Registration failed");
-      }
-    } catch {
-      toast.error("An unexpected error occurred during registration");
-    }
+  const onRegisterFinish = async () => {
+    toast.error(
+      "Registration is currently disabled. Please contact the administrator."
+    );
   };
 
   return (
-    <div className="min--full w-full flex bg-gray-50 dark:bg-zinc-900">
+    <div className="min-h-screen w-full flex bg-gray-50 dark:bg-zinc-900">
       {/* Left side - Image */}
       <div className="hidden lg:flex w-1/2 items-center justify-center p-8 bg-white">
         <div className="max-w-xl text-center">
@@ -153,6 +137,7 @@ function Login() {
             {isLogin ? (
               <Form {...loginForm}>
                 <form
+                  key="login-form"
                   onSubmit={loginForm.handleSubmit(onLoginFinish)}
                   className="space-y-4"
                 >
@@ -217,6 +202,7 @@ function Login() {
             ) : (
               <Form {...registerForm}>
                 <form
+                  key="register-form"
                   onSubmit={registerForm.handleSubmit(onRegisterFinish)}
                   className="space-y-4"
                 >
@@ -227,7 +213,11 @@ function Login() {
                       <FormItem>
                         <FormLabel>Username</FormLabel>
                         <FormControl>
-                          <Input placeholder="Choose a username" {...field} />
+                          <Input
+                            id="register-username"
+                            placeholder="Choose a username"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -240,7 +230,11 @@ function Login() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="name@example.com" {...field} />
+                          <Input
+                            id="register-email"
+                            placeholder="name@example.com"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -253,7 +247,11 @@ function Login() {
                       <FormItem>
                         <FormLabel>Phone (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="+1 234 567 890" {...field} />
+                          <Input
+                            id="register-phone"
+                            placeholder="+353 8x xxx xxxx"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -268,6 +266,7 @@ function Login() {
                         <FormControl>
                           <div className="relative">
                             <Input
+                              id="register-password"
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a password"
                               {...field}
@@ -298,11 +297,27 @@ function Login() {
                       <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Confirm your password"
-                            {...field}
-                          />
+                          <div className="relative">
+                            <Input
+                              id="register-confirm-password"
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Confirm your password"
+                              {...field}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

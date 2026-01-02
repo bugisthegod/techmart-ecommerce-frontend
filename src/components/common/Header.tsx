@@ -95,7 +95,7 @@ function Header() {
               <Link to="/login">
                 <Button variant="ghost" size="sm">Login</Button>
               </Link>
-              <Link to="/login"> {/* Using login for register flow too usually, or create separate register route if needed */}
+              <Link to="/login">
                 <Button size="sm">Get Started</Button>
               </Link>
             </div>
